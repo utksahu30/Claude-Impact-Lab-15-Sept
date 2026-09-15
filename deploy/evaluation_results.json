@@ -13,7 +13,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "HIGH",
-      "predicted_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
       "expected_ward": "Kolar Road",
       "dup_group": "dup_kolar_pipe"
     },
@@ -85,7 +85,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "MEDIUM",
-      "predicted_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
       "expected_ward": "MP Nagar",
       "dup_group": null
     },
@@ -97,7 +97,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "MEDIUM",
-      "predicted_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
       "expected_ward": "TT Nagar",
       "dup_group": null
     },
@@ -109,7 +109,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "HIGH",
-      "predicted_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
       "expected_ward": "Karond",
       "dup_group": null
     },
@@ -121,7 +121,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "MEDIUM",
-      "predicted_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
       "expected_ward": "Bairagarh",
       "dup_group": null
     },
@@ -169,7 +169,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "HIGH",
-      "predicted_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
       "expected_ward": "Jahangirabad",
       "dup_group": null
     },
@@ -181,7 +181,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "MEDIUM",
-      "predicted_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
       "expected_ward": "Hoshangabad Road",
       "dup_group": null
     },
@@ -205,7 +205,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "LOW",
-      "predicted_urgency": "LOW",
+      "predicted_urgency": "MEDIUM",
       "expected_ward": "Ashoka Garden",
       "dup_group": null
     },
@@ -217,7 +217,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "LOW",
-      "predicted_urgency": "MEDIUM",
+      "predicted_urgency": "LOW",
       "expected_ward": "Chuna Bhatti",
       "dup_group": null
     },
@@ -229,7 +229,7 @@
       "is_match": true,
       "fb_match": true,
       "expected_urgency": "MEDIUM",
-      "predicted_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
       "expected_ward": "Gandhi Nagar",
       "dup_group": null
     },

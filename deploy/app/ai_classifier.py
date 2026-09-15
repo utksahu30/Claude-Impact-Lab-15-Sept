@@ -58,44 +58,63 @@ CRITICAL INSTRUCTIONS:
 """
 
 
-def get_openai_client(api_key: Optional[str] = None) -> OpenAI:
-    """Instantiates the OpenAI client configured for Qwen 3.8 Max or custom base URL."""
-    key = api_key or settings.dashscope_api_key or settings.dashscope_fallback_api_key or "sk-placeholder"
-    return OpenAI(
-        api_key=key,
-        base_url=settings.dashscope_base_url,
-        timeout=settings.ai_timeout_seconds
-    )
+def get_ai_client(provider: str, api_key: Optional[str] = None) -> tuple[OpenAI, str]:
+    """
+    Instantiates an OpenAI-compatible client for either Google Gemini or Alibaba Qwen/DashScope.
+    Returns (client, model_name).
+    """
+    if provider == "gemini":
+        key = api_key or settings.gemini_api_key or "AQ-placeholder"
+        return OpenAI(
+            api_key=key,
+            base_url=settings.gemini_base_url,
+            timeout=settings.ai_timeout_seconds
+        ), settings.gemini_model
+    else:
+        key = api_key or settings.dashscope_api_key or settings.dashscope_fallback_api_key or "sk-placeholder"
+        return OpenAI(
+            api_key=key,
+            base_url=settings.dashscope_base_url,
+            timeout=settings.ai_timeout_seconds
+        ), settings.qwen_model
 
 
 def classify(raw_text: str, prompt_version: str = "v1") -> ClassificationResult:
     """
-    Calls Qwen 3.8 Max with timeout, retries, multi-key quota failover, and strict schema validation.
+    Calls Gemini 3.6 Flash (or Qwen 3.8 Max fallback) with timeout, retries, multi-key failover, and strict schema validation.
     Raises ClassificationFailed on any network or validation error.
     """
     if not settings.allow_external_ai:
         raise ClassificationFailed("external_ai_disabled")
 
-    # Collect available keys in priority order (primary first, then fallback)
-    available_keys = []
-    if settings.dashscope_api_key:
-        available_keys.append(settings.dashscope_api_key)
-    if settings.dashscope_fallback_api_key and settings.dashscope_fallback_api_key not in available_keys:
-        available_keys.append(settings.dashscope_fallback_api_key)
+    # Build sequence of provider targets: primary (Gemini) followed by Qwen/DashScope backups
+    provider_targets: list[tuple[str, str, str]] = []
 
-    if not available_keys:
+    # 1. Primary: Gemini (Google AI Studio)
+    if settings.gemini_api_key:
+        provider_targets.append(("gemini", settings.gemini_api_key, settings.gemini_model))
+
+    # 2. Secondary: DashScope Primary Key (if provided)
+    if settings.dashscope_api_key:
+        provider_targets.append(("qwen", settings.dashscope_api_key, settings.qwen_model))
+
+    # 3. Tertiary: DashScope Backup Key
+    if settings.dashscope_fallback_api_key and settings.dashscope_fallback_api_key != settings.dashscope_api_key:
+        provider_targets.append(("qwen", settings.dashscope_fallback_api_key, settings.qwen_model))
+
+    if not provider_targets:
         raise ClassificationFailed("missing_api_key")
 
     last_exc: Optional[Exception] = None
 
-    # Try each available API key in sequence if quota / credits run out
-    for key_idx, key in enumerate(available_keys):
-        client = get_openai_client(api_key=key)
+    # Iterate through targets with automatic failover
+    for target_idx, (provider, api_key, model_name) in enumerate(provider_targets):
+        client, model = get_ai_client(provider=provider, api_key=api_key)
 
         for attempt in range(settings.ai_max_retries):
             try:
                 response = client.chat.completions.create(
-                    model=settings.qwen_model,
+                    model=model,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
                         {"role": "user", "content": f"Analyze and classify this civic complaint:\n\n{raw_text}"}
@@ -108,7 +127,17 @@ def classify(raw_text: str, prompt_version: str = "v1") -> ClassificationResult:
                 if not raw_content:
                     raise ClassificationFailed("empty_response")
 
-                data = json.loads(raw_content)
+                # Strip markdown fences if returned
+                cleaned_content = raw_content.strip()
+                if cleaned_content.startswith("```"):
+                    lines = cleaned_content.splitlines()
+                    if lines[0].startswith("```"):
+                        lines = lines[1:]
+                    if lines and lines[-1].startswith("```"):
+                        lines = lines[:-1]
+                    cleaned_content = "\n".join(lines).strip()
+
+                data = json.loads(cleaned_content)
                 result = ClassificationResult.model_validate(data)
                 return result
 
@@ -117,10 +146,9 @@ def classify(raw_text: str, prompt_version: str = "v1") -> ClassificationResult:
                 time.sleep(1.5 ** attempt)
                 continue
             except RateLimitError as e:
-                # If rate limited / quota exhausted on current key and another key exists, failover to next key
                 last_exc = e
-                if key_idx < len(available_keys) - 1:
-                    print(f"[ai_classifier] Primary API key quota/rate-limit hit. Switching to fallback API key...", flush=True)
+                if target_idx < len(provider_targets) - 1:
+                    print(f"[ai_classifier] {provider} rate-limit/quota hit. Switching to backup target...", flush=True)
                     break
                 time.sleep(2.0 ** attempt * 2)
                 continue
@@ -131,8 +159,8 @@ def classify(raw_text: str, prompt_version: str = "v1") -> ClassificationResult:
             except APIStatusError as e:
                 last_exc = e
                 # Status 401, 402, 403, 429 indicate authentication, payment, quota or rate limits
-                if e.status_code in (401, 402, 403, 429) and key_idx < len(available_keys) - 1:
-                    print(f"[ai_classifier] API key returned status {e.status_code}. Switching to fallback API key...", flush=True)
+                if e.status_code in (401, 402, 403, 429) and target_idx < len(provider_targets) - 1:
+                    print(f"[ai_classifier] {provider} returned status {e.status_code}. Switching to backup target...", flush=True)
                     break
                 raise ClassificationFailed(f"api_status_{e.status_code}") from e
             except (json.JSONDecodeError, ValidationError) as e:

@@ -10,11 +10,19 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    # LLM Settings (Defaulting to Qwen 3.8 Max via DashScope)
-    llm_provider: str = "qwen"
+    # LLM Provider & Model Settings
+    # Supports "gemini" (Google AI Studio) and "qwen" (Alibaba DashScope)
+    llm_provider: str = "gemini"
+    
+    # Gemini Settings (Google AI Studio)
+    gemini_api_key: Optional[str] = None
+    gemini_model: str = "gemini-3.6-flash"
+    gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
+    # Qwen / DashScope Settings (Backup / Alternative)
     qwen_model: str = "qwen3.8-max"
     dashscope_api_key: Optional[str] = None
-    dashscope_fallback_api_key: Optional[str] = "sk-ws-H.DHLXIHL.IJT1.MEQCIHWr0_4t4vyDdMVW4ohiSZtcVyxY5EbTg6ugWS7NvP8_AiBrUpr8IKYax2nahDGlT9e2xzNRdws4bdZTnj_Hs5lFgQ"
+    dashscope_fallback_api_key: Optional[str] = None
     dashscope_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
     
     # Anthropic compatibility option
