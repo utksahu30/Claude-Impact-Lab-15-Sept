@@ -6,22 +6,42 @@ from .gazetteer import extract_ward_from_text
 # Comprehensive keyword lookup for offline triage (Hindi, Hinglish, English)
 KEYWORD_MAP: list[tuple[list[str], str, str, str]] = [
     # (keywords, department, category, urgency)
+    # 1. Critical Emergency Hazards
     (["fire", "aag", "cylinder blast", "dhamaka"], "Electricity", "Fire Hazard", "CRITICAL"),
     (["electrocution", "bijli ka jhatka", "current", "live wire", "exposed wire", "sparking"], "Electricity", "Hanging Live Wire", "CRITICAL"),
     (["gas leak", "building collapse", "girne wali"], "Roads & Infrastructure", "Emergency Hazard", "CRITICAL"),
-    (["water", "paani", "supply", "tonti", "nal", "boring", "tanker"], "Water Supply", "Supply Interruption", "MEDIUM"),
-    (["pipe burst", "pipe leak", "paani bah raha", "pipeline"], "Water Supply", "Pipe Burst", "HIGH"),
-    (["ganda paani", "contaminated water", "badboo paani"], "Water Supply", "Contaminated Water", "HIGH"),
-    (["kachra", "garbage", "dustbin", "safai", "dump", "gandagi", "kachrewala"], "Sanitation", "Waste Collection", "MEDIUM"),
-    (["dead animal", "mara hua kutta", "mara janwar"], "Sanitation", "Dead Animal Removal", "HIGH"),
-    (["drain", "naali", "gutter", "sewage", "overflow", "chamber block", "choked drain"], "Drainage & Sewage", "Sewage Overflow", "HIGH"),
-    (["streetlight", "street light", "andhera", "khamba light", "light band"], "Electricity", "Streetlight Outage", "MEDIUM"),
+    (["open manhole", "khula manhole", "manhole cover missing", "gutter khula", "deep open manhole"], "Roads & Infrastructure", "Open Manhole", "CRITICAL"),
+
+    # 2. Public Health (Specific diseases & fogging must precede water/sanitation)
+    (["fogging", "machhar", "mosquito", "dengue", "chikungunya", "malaria", "dawa chhidkaw"], "Public Health", "Mosquito Fogging", "MEDIUM"),
+
+    # 3. Encroachment (Illegal construction / blocked footpath is actionable root cause)
+    (["encroachment", "kabza", "illegal construction", "illegal shopkeepers", "footpath par kabza", "footpath block", "thela", "hawker"], "Encroachment", "Footpath Blocked", "LOW"),
+
+    # 4. Drainage & Sewage (Specific sewage/drain/nallah terms)
+    (["sewage", "gutter", "drain", "naali", "nallah", "nalah", "chamber block", "choked drain", "badboodar paani", "ganda badboodar"], "Drainage & Sewage", "Sewage Overflow", "HIGH"),
+
+    # 5. Roads & Infrastructure (Waterlogging, potholes, broken roads)
+    (["waterlogging", "water logging", "pothole", "gaddha", "road broken", "khadda", "tar road"], "Roads & Infrastructure", "Pothole", "MEDIUM"),
+
+    # 6. Stray Animals (Use precise animal terms to avoid colliding with 'ho gaya')
+    (["stray dog", "kutta", "kutto", "dog bites", "kutto ka aatank", "stray cattle", "gaay", " gay ", " bail ", "bandar", "awara"], "Stray Animals", "Dog Menace", "MEDIUM"),
+
+    # 7. Electricity (Streetlights, transformers)
     (["transformer", "sparking transformer", "dhamaka transformer"], "Electricity", "Sparking Transformer", "HIGH"),
-    (["pothole", "gaddha", "sadak", "road broken", "khadda", "tar road"], "Roads & Infrastructure", "Pothole", "MEDIUM"),
-    (["open manhole", "khula manhole", "manhole cover missing", "gutter khula"], "Roads & Infrastructure", "Open Manhole", "CRITICAL"),
-    (["stray dog", "kutta", "dog bites", "kutto ka aatank", "stray cattle", "gay", "bail"], "Stray Animals", "Dog Menace", "MEDIUM"),
-    (["fogging", "machhar", "mosquito", "dengue", "malaria"], "Public Health", "Mosquito Fogging", "MEDIUM"),
-    (["encroachment", "kabza", "footpath block", "thela", "hawker"], "Encroachment", "Footpath Blocked", "LOW"),
+    (["streetlight", "street light", "andhera", "khamba light", "light band"], "Electricity", "Streetlight Outage", "MEDIUM"),
+
+    # 8. Sanitation (Waste, dead animals)
+    (["dead animal", "mara hua kutta", "mara janwar", "dead dog"], "Sanitation", "Dead Animal Removal", "HIGH"),
+    (["kachra", "garbage", "dustbin", "safai", "dump", "gandagi", "kachrewala"], "Sanitation", "Waste Collection", "MEDIUM"),
+
+    # 9. Water Supply (Drinking water, pipes, taps, tankers)
+    (["pipe burst", "pipe leak", "paani bah raha", "pipeline leak", "pipeline"], "Water Supply", "Pipe Burst", "HIGH"),
+    (["ganda paani", "contaminated water", "badboo paani", "peela aa raha", "peene yogya"], "Water Supply", "Contaminated Water", "HIGH"),
+    (["water", "paani", "supply", "tonti", "nal", "boring", "tanker"], "Water Supply", "Supply Interruption", "MEDIUM"),
+
+    # 10. General Road catch-all
+    (["sadak", "road"], "Roads & Infrastructure", "Pothole", "MEDIUM"),
 ]
 
 

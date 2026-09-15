@@ -53,6 +53,8 @@ CRITICAL INSTRUCTIONS:
 2. Ward: Normalize to standard Bhopal localities (e.g., MP Nagar, Arera Colony, Kolar Road, Shahpura, TT Nagar, Bairagarh, Karond, Govindpura, Old Bhopal).
 3. Confidence: Rate between 0.0 and 1.0. If ambiguous, provide a lower score.
 4. Reasoning terms: Include the exact keywords or phrases from the complaint that led to the routing decision.
+5. Root-Cause Routing: If illegal construction, unauthorized vendor encroachment, or illegal structure blocks a drain, footpath, or road, route to 'Encroachment' as the actionable root-cause authority.
+6. Waterlogging vs Water Supply: Rain waterlogging on roads must be routed to 'Roads & Infrastructure' (or 'Drainage & Sewage'), NEVER to 'Water Supply'. 'Water Supply' is solely for potable drinking water pipelines, taps, tanks, and shortages.
 """
 
 
