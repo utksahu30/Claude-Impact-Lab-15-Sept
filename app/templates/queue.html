@@ -231,7 +231,7 @@
               {% if t.classification_method == 'fallback_rules' %}
               <span class="badge-neo badge-fallback" title="Classified by deterministic fallback rules">Fallback Active</span>
               {% elif t.classification_method == 'llm' %}
-              <span class="badge-neo" style="background-color: var(--accent-blue-bg); color: var(--accent-blue); border-color: var(--accent-blue);">Qwen 3.8 Max</span>
+              <span class="badge-neo" style="background-color: var(--accent-blue-bg); color: var(--accent-blue); border-color: var(--accent-blue);">Gemini 3.6 Flash</span>
               {% elif t.classification_method == 'safety_override' %}
               <span class="badge-neo badge-critical">Safety Override</span>
               {% else %}
@@ -239,7 +239,18 @@
               {% endif %}
             </td>
             <td>
-              <a href="/tickets/{{ t.id }}" class="btn-neo btn-neo-white btn-neo-sm">Inspect</a>
+              <div style="display: flex; gap: 0.4rem; align-items: center;">
+                <a href="/tickets/{{ t.id }}" class="btn-neo btn-neo-white btn-neo-sm">Inspect</a>
+                {% if t.status in ['TRIAGED', 'NEEDS_REVIEW'] %}
+                <form method="POST" action="/tickets/{{ t.id }}/approve" style="display: inline; margin: 0;">
+                  <button type="submit" class="btn-neo btn-neo-green btn-neo-sm" title="Quick Approve">✓</button>
+                </form>
+                {% elif t.status == 'APPROVED' %}
+                <form method="POST" action="/tickets/{{ t.id }}/resolve" style="display: inline; margin: 0;">
+                  <button type="submit" class="btn-neo btn-neo-black btn-neo-sm" title="Quick Resolve">🏁</button>
+                </form>
+                {% endif %}
+              </div>
             </td>
           </tr>
           {% endfor %}

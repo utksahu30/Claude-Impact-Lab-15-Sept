@@ -197,6 +197,7 @@ def ticket_override(
     ward: Optional[str] = Form(None),
     urgency: Optional[str] = Form(None),
     override_reason: Optional[str] = Form(None),
+    auto_approve: Optional[bool] = Form(False),
     session: Session = Depends(get_session)
 ):
     ticket = session.get(Ticket, ticket_id)
@@ -205,7 +206,7 @@ def ticket_override(
 
     new_urgency = urgency or ticket.urgency
 
-    # Enforce Section 6.3 Rule 3 on Operator Overrides:
+    # Enforce Precedence Rule on Operator Overrides:
     # If text has safety keywords and operator tries to lower urgency from CRITICAL to MEDIUM/LOW,
     # an audited reason is MANDATORY.
     if contains_safety_keyword(ticket.sanitized_text) and new_urgency in ("MEDIUM", "LOW") and ticket.urgency == "CRITICAL":
@@ -219,16 +220,30 @@ def ticket_override(
         ticket.safety_floor_overridden = True
         ticket.override_reason = override_reason.strip()
 
-    if department:
+    # Track if any routing categorization actually changed
+    has_changed = False
+    if department and department != ticket.department:
         ticket.department = department
-    if category:
+        has_changed = True
+    if category and category != ticket.category:
         ticket.category = category
+        has_changed = True
     if ward:
-        ticket.ward = normalize_ward(ward) or ward
-    if new_urgency:
+        norm_w = normalize_ward(ward) or ward
+        if norm_w != ticket.ward:
+            ticket.ward = norm_w
+            has_changed = True
+    if new_urgency and new_urgency != ticket.urgency:
         ticket.urgency = new_urgency
+        has_changed = True
 
-    ticket.human_override = True
+    if has_changed:
+        ticket.human_override = True
+
+    # If auto_approve requested or operator clicked 'Approve & Lock'
+    if auto_approve and can_transition(ticket.status, TicketStatus.APPROVED):
+        transition(ticket, TicketStatus.APPROVED)
+
     session.add(ticket)
     session.commit()
 
@@ -238,6 +253,11 @@ def ticket_override(
 @app.post("/tickets/{ticket_id}/approve", response_class=RedirectResponse)
 def ticket_approve(
     ticket_id: int,
+    department: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    ward: Optional[str] = Form(None),
+    urgency: Optional[str] = Form(None),
+    override_reason: Optional[str] = Form(None),
     ack_draft_en: Optional[str] = Form(None),
     ack_draft_hi: Optional[str] = Form(None),
     session: Session = Depends(get_session)
@@ -246,8 +266,33 @@ def ticket_approve(
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
 
+    # If operator changed categorization fields while approving
+    has_changed = False
+    if department and department != ticket.department:
+        ticket.department = department
+        has_changed = True
+    if category and category != ticket.category:
+        ticket.category = category
+        has_changed = True
+    if ward:
+        norm_w = normalize_ward(ward) or ward
+        if norm_w != ticket.ward:
+            ticket.ward = norm_w
+            has_changed = True
+    if urgency and urgency != ticket.urgency:
+        if contains_safety_keyword(ticket.sanitized_text) and urgency in ("MEDIUM", "LOW") and ticket.urgency == "CRITICAL":
+            if override_reason and override_reason.strip():
+                ticket.safety_floor_overridden = True
+                ticket.override_reason = override_reason.strip()
+        ticket.urgency = urgency
+        has_changed = True
+
+    if has_changed:
+        ticket.human_override = True
+
     # Validate state transition guard (Section 4)
-    transition(ticket, TicketStatus.APPROVED)
+    if can_transition(ticket.status, TicketStatus.APPROVED):
+        transition(ticket, TicketStatus.APPROVED)
 
     if ack_draft_en:
         ticket.ack_draft_en = ack_draft_en

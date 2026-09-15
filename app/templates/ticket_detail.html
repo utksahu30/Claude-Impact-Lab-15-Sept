@@ -240,7 +240,14 @@
           <input type="text" name="override_reason" class="form-control" placeholder="e.g., Verified small controlled drill, no live hazard" value="{{ ticket.override_reason or '' }}">
         </div>
 
-        <button type="submit" class="btn-neo btn-neo-black" style="width: 100%;">Apply Human Override</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <button type="submit" name="auto_approve" value="false" class="btn-neo btn-neo-black">
+            💾 Update Categorization
+          </button>
+          <button type="submit" name="auto_approve" value="true" class="btn-neo btn-neo-green">
+            ✓ Update & Approve Ticket
+          </button>
+        </div>
       </form>
     </div>
 
@@ -269,9 +276,14 @@
           ✓ Confirm & Lock Acknowledgement Draft
         </button>
         {% elif ticket.status == 'APPROVED' %}
-        <div class="alert-neo alert-success" style="margin-bottom: 0; text-align: center;">
+        <div class="alert-neo alert-success" style="margin-bottom: 0.75rem; text-align: center;">
           ✓ Acknowledgement Locked for Official Dispatch (Status: APPROVED)
         </div>
+        <form method="POST" action="/tickets/{{ ticket.id }}/resolve">
+          <button type="submit" class="btn-neo btn-neo-black" style="width: 100%;">
+            🏁 Mark Complaint as RESOLVED (Log Resolution Time)
+          </button>
+        </form>
         {% elif ticket.status == 'RESOLVED' %}
         <div class="alert-neo alert-success" style="margin-bottom: 0; text-align: center;">
           ✓ Resolved on {{ ticket.resolved_at.strftime('%Y-%m-%d %H:%M') if ticket.resolved_at else 'N/A' }}
