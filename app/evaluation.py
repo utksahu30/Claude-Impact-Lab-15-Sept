@@ -12,7 +12,13 @@ from .safety_rules import apply_safety_floor
 from .dedup import find_duplicate_clusters
 from .models import Ticket
 
-TEST_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "held_out_test.csv"
+_candidate_test_csvs = [
+    Path(__file__).resolve().parent.parent / "data" / "held_out_test.csv",
+    Path(__file__).resolve().parent / "data" / "held_out_test.csv",
+    Path("data") / "held_out_test.csv",
+    Path("/app/data") / "held_out_test.csv"
+]
+TEST_CSV_PATH = next((p for p in _candidate_test_csvs if p.exists()), _candidate_test_csvs[0])
 
 
 def evaluate_record(r: dict[str, Any]) -> dict[str, Any]:

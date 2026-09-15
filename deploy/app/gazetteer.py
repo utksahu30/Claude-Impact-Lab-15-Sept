@@ -4,7 +4,13 @@ from pathlib import Path
 from typing import Optional
 from rapidfuzz import process, fuzz
 
-GAZETTEER_PATH = Path(__file__).resolve().parent.parent / "data" / "gazetteer.json"
+_candidate_gazetteers = [
+    Path(__file__).resolve().parent.parent / "data" / "gazetteer.json",
+    Path(__file__).resolve().parent / "data" / "gazetteer.json",
+    Path("data") / "gazetteer.json",
+    Path("/app/data") / "gazetteer.json"
+]
+GAZETTEER_PATH = next((p for p in _candidate_gazetteers if p.exists()), _candidate_gazetteers[0])
 
 try:
     with open(GAZETTEER_PATH, "r", encoding="utf-8") as f:

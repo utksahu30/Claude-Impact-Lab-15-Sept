@@ -481,30 +481,40 @@ def run_evaluation_benchmark(request: Request):
 @app.get("/admin/reset", response_class=RedirectResponse)
 def reset_demo_data(session: Session = Depends(get_session)):
     from sqlmodel import delete
-    session.exec(delete(DuplicateLink))
-    session.exec(delete(Ticket))
-    session.exec(delete(UploadBatch))
-    session.commit()
+    try:
+        session.exec(delete(DuplicateLink))
+        session.exec(delete(Ticket))
+        session.exec(delete(UploadBatch))
+        session.commit()
 
-    demo_csv = BASE_DIR.parent / "data" / "demo_complaints.csv"
-    if demo_csv.exists():
-        with open(demo_csv, "rb") as f:
-            raw_bytes = f.read()
-        decoded_text, enc, lossy = decode_csv_bytes(raw_bytes)
-        mapping = {
-            "complaint_text_col": "complaint_text",
-            "channel_col": "channel",
-            "ward_col": "ward",
-            "timestamp_col": "timestamp"
-        }
-        ingest_mapped_csv(
-            session=session,
-            batch_id="demo_initial_seed",
-            decoded_text=decoded_text,
-            mapping=mapping,
-            filename="demo_complaints.csv",
-            encoding_used=enc,
-            was_lossy=lossy
-        )
+        # Search for demo_complaints.csv across possible deployment directory layouts
+        candidate_paths = [
+            BASE_DIR.parent / "data" / "demo_complaints.csv",
+            BASE_DIR / "data" / "demo_complaints.csv",
+            Path("data") / "demo_complaints.csv",
+            Path("/app/data") / "demo_complaints.csv"
+        ]
+        demo_csv = next((p for p in candidate_paths if p.exists()), None)
+        if demo_csv:
+            with open(demo_csv, "rb") as f:
+                raw_bytes = f.read()
+            decoded_text, enc, lossy = decode_csv_bytes(raw_bytes)
+            mapping = {
+                "complaint_text_col": "complaint_text",
+                "channel_col": "channel",
+                "ward_col": "ward",
+                "timestamp_col": "timestamp"
+            }
+            ingest_mapped_csv(
+                session=session,
+                batch_id="demo_initial_seed",
+                decoded_text=decoded_text,
+                mapping=mapping,
+                filename="demo_complaints.csv",
+                encoding_used=enc,
+                was_lossy=lossy
+            )
+    except Exception as e:
+        print(f"[admin/reset] Warning encountered during data reset: {e}", flush=True)
 
     return RedirectResponse(url="/tickets", status_code=status.HTTP_302_FOUND)

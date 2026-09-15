@@ -23,7 +23,13 @@ class ClassificationFailed(Exception):
 
 
 # Load taxonomy for system prompt context
-TAXONOMY_PATH = Path(__file__).resolve().parent.parent / "data" / "taxonomy.json"
+_candidate_taxonomies = [
+    Path(__file__).resolve().parent.parent / "data" / "taxonomy.json",
+    Path(__file__).resolve().parent / "data" / "taxonomy.json",
+    Path("data") / "taxonomy.json",
+    Path("/app/data") / "taxonomy.json"
+]
+TAXONOMY_PATH = next((p for p in _candidate_taxonomies if p.exists()), _candidate_taxonomies[0])
 try:
     with open(TAXONOMY_PATH, "r", encoding="utf-8") as f:
         TAXONOMY_DATA = json.load(f)
