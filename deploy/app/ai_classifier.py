@@ -58,10 +58,11 @@ CRITICAL INSTRUCTIONS:
 """
 
 
-def get_openai_client() -> OpenAI:
+def get_openai_client(api_key: Optional[str] = None) -> OpenAI:
     """Instantiates the OpenAI client configured for Qwen 3.8 Max or custom base URL."""
+    key = api_key or settings.dashscope_api_key or settings.dashscope_fallback_api_key or "sk-placeholder"
     return OpenAI(
-        api_key=settings.dashscope_api_key or "sk-placeholder",
+        api_key=key,
         base_url=settings.dashscope_base_url,
         timeout=settings.ai_timeout_seconds
     )
@@ -69,56 +70,75 @@ def get_openai_client() -> OpenAI:
 
 def classify(raw_text: str, prompt_version: str = "v1") -> ClassificationResult:
     """
-    Calls Qwen 3.8 Max with timeout, retries, and strict schema validation.
+    Calls Qwen 3.8 Max with timeout, retries, multi-key quota failover, and strict schema validation.
     Raises ClassificationFailed on any network or validation error.
     """
     if not settings.allow_external_ai:
         raise ClassificationFailed("external_ai_disabled")
 
-    if not settings.dashscope_api_key:
+    # Collect available keys in priority order (primary first, then fallback)
+    available_keys = []
+    if settings.dashscope_api_key:
+        available_keys.append(settings.dashscope_api_key)
+    if settings.dashscope_fallback_api_key and settings.dashscope_fallback_api_key not in available_keys:
+        available_keys.append(settings.dashscope_fallback_api_key)
+
+    if not available_keys:
         raise ClassificationFailed("missing_api_key")
 
-    client = get_openai_client()
     last_exc: Optional[Exception] = None
 
-    for attempt in range(settings.ai_max_retries):
-        try:
-            response = client.chat.completions.create(
-                model=settings.qwen_model,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": f"Analyze and classify this civic complaint:\n\n{raw_text}"}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1
-            )
+    # Try each available API key in sequence if quota / credits run out
+    for key_idx, key in enumerate(available_keys):
+        client = get_openai_client(api_key=key)
 
-            raw_content = response.choices[0].message.content
-            if not raw_content:
-                raise ClassificationFailed("empty_response")
+        for attempt in range(settings.ai_max_retries):
+            try:
+                response = client.chat.completions.create(
+                    model=settings.qwen_model,
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": f"Analyze and classify this civic complaint:\n\n{raw_text}"}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1
+                )
 
-            data = json.loads(raw_content)
-            result = ClassificationResult.model_validate(data)
-            return result
+                raw_content = response.choices[0].message.content
+                if not raw_content:
+                    raise ClassificationFailed("empty_response")
 
-        except APITimeoutError as e:
-            last_exc = e
-            time.sleep(1.5 ** attempt)
-            continue
-        except RateLimitError as e:
-            last_exc = e
-            time.sleep(2.0 ** attempt * 2)
-            continue
-        except APIConnectionError as e:
-            last_exc = e
-            time.sleep(1.5 ** attempt)
-            continue
-        except APIStatusError as e:
-            raise ClassificationFailed(f"api_status_{e.status_code}") from e
-        except (json.JSONDecodeError, ValidationError) as e:
-            raise ClassificationFailed("invalid_output") from e
-        except Exception as e:
-            raise ClassificationFailed(f"unexpected_error_{type(e).__name__}") from e
+                data = json.loads(raw_content)
+                result = ClassificationResult.model_validate(data)
+                return result
+
+            except APITimeoutError as e:
+                last_exc = e
+                time.sleep(1.5 ** attempt)
+                continue
+            except RateLimitError as e:
+                # If rate limited / quota exhausted on current key and another key exists, failover to next key
+                last_exc = e
+                if key_idx < len(available_keys) - 1:
+                    print(f"[ai_classifier] Primary API key quota/rate-limit hit. Switching to fallback API key...", flush=True)
+                    break
+                time.sleep(2.0 ** attempt * 2)
+                continue
+            except APIConnectionError as e:
+                last_exc = e
+                time.sleep(1.5 ** attempt)
+                continue
+            except APIStatusError as e:
+                last_exc = e
+                # Status 401, 402, 403, 429 indicate authentication, payment, quota or rate limits
+                if e.status_code in (401, 402, 403, 429) and key_idx < len(available_keys) - 1:
+                    print(f"[ai_classifier] API key returned status {e.status_code}. Switching to fallback API key...", flush=True)
+                    break
+                raise ClassificationFailed(f"api_status_{e.status_code}") from e
+            except (json.JSONDecodeError, ValidationError) as e:
+                raise ClassificationFailed("invalid_output") from e
+            except Exception as e:
+                raise ClassificationFailed(f"unexpected_error_{type(e).__name__}") from e
 
     raise ClassificationFailed("retries_exhausted") from last_exc
 

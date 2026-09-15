@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     llm_provider: str = "qwen"
     qwen_model: str = "qwen3.8-max"
     dashscope_api_key: Optional[str] = None
+    dashscope_fallback_api_key: Optional[str] = "sk-ws-H.DHLXIHL.IJT1.MEQCIHWr0_4t4vyDdMVW4ohiSZtcVyxY5EbTg6ugWS7NvP8_AiBrUpr8IKYax2nahDGlT9e2xzNRdws4bdZTnj_Hs5lFgQ"
     dashscope_base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
     
     # Anthropic compatibility option
