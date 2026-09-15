@@ -1,0 +1,209 @@
+{
+  "llm_accuracy": 85.0,
+  "fallback_accuracy": 70.0,
+  "duplicate_precision": 100.0,
+  "duplicate_recall": 0.0,
+  "total_cases": 20,
+  "cases": [
+    {
+      "id": 1,
+      "text": "Kolar Road Danish Kunj ke main pipeline me bada leak ho gaya hai, sadak par paani bhara hua hai.",
+      "expected_dept": "Water Supply",
+      "predicted_dept": "Water Supply",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "HIGH",
+      "dup_group": "dup_kolar_pipe"
+    },
+    {
+      "id": 2,
+      "text": "Danish Kunj Kolar me main drinking water pipe toot gaya hai aur paani barbad ho raha hai turant repair bheje.",
+      "expected_dept": "Water Supply",
+      "predicted_dept": "Water Supply",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "HIGH",
+      "dup_group": "dup_kolar_pipe"
+    },
+    {
+      "id": 3,
+      "text": "Arera Colony E-2 me dustbin poora overflow ho kar kachra sadak par fail gaya hai, bohot gandi smell hai.",
+      "expected_dept": "Sanitation",
+      "predicted_dept": "Sanitation",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": "dup_arera_garbage"
+    },
+    {
+      "id": 4,
+      "text": "E2 Arera colony me garbage bin se kachra faila hua hai do din se safai nahi hui.",
+      "expected_dept": "Sanitation",
+      "predicted_dept": "Sanitation",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": "dup_arera_garbage"
+    },
+    {
+      "id": 5,
+      "text": "Govindpura BHEL gate ke paas live electrical wire tut kar sadak par gira hai sparking ho rahi hai aag lagne ka darr hai.",
+      "expected_dept": "Electricity",
+      "predicted_dept": "Electricity",
+      "is_match": true,
+      "expected_urgency": "CRITICAL",
+      "predicted_urgency": "CRITICAL",
+      "dup_group": null
+    },
+    {
+      "id": 6,
+      "text": "Shahpura lake road par deep open manhole bina dhakkan ke hai accident hone ka khatra hai.",
+      "expected_dept": "Roads & Infrastructure",
+      "predicted_dept": "Roads & Infrastructure",
+      "is_match": true,
+      "expected_urgency": "CRITICAL",
+      "predicted_urgency": "CRITICAL",
+      "dup_group": null
+    },
+    {
+      "id": 7,
+      "text": "MP Nagar Zone 1 me streetlights pichhle chaar din se band padi hain poora andhera rehta hai.",
+      "expected_dept": "Electricity",
+      "predicted_dept": "Electricity",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
+      "dup_group": null
+    },
+    {
+      "id": 8,
+      "text": "TT Nagar Roshanpura chourahe par sadak par bohot bada gaddha ban gaya hai gaadiyan fisal rahi hain.",
+      "expected_dept": "Roads & Infrastructure",
+      "predicted_dept": "Roads & Infrastructure",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "HIGH",
+      "dup_group": null
+    },
+    {
+      "id": 9,
+      "text": "Karond mandi ke paas sewage drain choke hone se ganda badboodar paani dukanon ke saamne beh raha hai.",
+      "expected_dept": "Drainage & Sewage",
+      "predicted_dept": "Drainage & Sewage",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 10,
+      "text": "Bairagarh Halalpura bus stand ke paas awara kutto ka aatank hai jo paidal chalne walo par jhapatte hain.",
+      "expected_dept": "Stray Animals",
+      "predicted_dept": "Stray Animals",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 11,
+      "text": "Ayodhya Bypass Minal residency ke paas dengue aur chikungunya ke bachav ke liye fogging karwaiye.",
+      "expected_dept": "Public Health",
+      "predicted_dept": "Water Supply",
+      "is_match": false,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 12,
+      "text": "Old Bhopal Chowk Bazar me illegal shopkeepers ne footpath par kabza kar liya hai paidal chalne ki jagah nahi hai.",
+      "expected_dept": "Encroachment",
+      "predicted_dept": "Encroachment",
+      "is_match": true,
+      "expected_urgency": "LOW",
+      "predicted_urgency": "LOW",
+      "dup_group": null
+    },
+    {
+      "id": 13,
+      "text": "Katara Hills me pichhle 48 ghante se supply ka paani nahi aaya hai log pareshan hain tanker bheje.",
+      "expected_dept": "Water Supply",
+      "predicted_dept": "Water Supply",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 14,
+      "text": "Jahangirabad police line ke paas dead dog pada hua hai subah se safai karwaye.",
+      "expected_dept": "Sanitation",
+      "predicted_dept": "Sanitation",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 15,
+      "text": "Hoshangabad Road Misrod par open drain me plastic kachra jama hone se nallah block ho gaya hai.",
+      "expected_dept": "Drainage & Sewage",
+      "predicted_dept": "Drainage & Sewage",
+      "is_match": true,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 16,
+      "text": "New Market Top 'N Town ke peeche transformer se loud humming aur sparking ho rahi hai.",
+      "expected_dept": "Electricity",
+      "predicted_dept": "Electricity",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "CRITICAL",
+      "dup_group": null
+    },
+    {
+      "id": 17,
+      "text": "Ashoka Garden 80 feet road par gay aur bail sadak ke beech me ghoomte hain traffic block hota hai.",
+      "expected_dept": "Stray Animals",
+      "predicted_dept": "Stray Animals",
+      "is_match": true,
+      "expected_urgency": "LOW",
+      "predicted_urgency": "HIGH",
+      "dup_group": null
+    },
+    {
+      "id": 18,
+      "text": "Chuna Bhatti kaliasot dam ke paas illegal construction kar ke naali band kar di gayi hai.",
+      "expected_dept": "Encroachment",
+      "predicted_dept": "Drainage & Sewage",
+      "is_match": false,
+      "expected_urgency": "LOW",
+      "predicted_urgency": "HIGH",
+      "dup_group": null
+    },
+    {
+      "id": 19,
+      "text": "Gandhi Nagar airport road par barish ke paani se road par heavy waterlogging ho gayi hai gaddhe nahi dikhte.",
+      "expected_dept": "Roads & Infrastructure",
+      "predicted_dept": "Water Supply",
+      "is_match": false,
+      "expected_urgency": "MEDIUM",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    },
+    {
+      "id": 20,
+      "text": "Koh-e-fiza VIP road par tap water bohot ganda aur peela aa raha hai peene yogya nahi hai.",
+      "expected_dept": "Water Supply",
+      "predicted_dept": "Water Supply",
+      "is_match": true,
+      "expected_urgency": "HIGH",
+      "predicted_urgency": "MEDIUM",
+      "dup_group": null
+    }
+  ]
+}

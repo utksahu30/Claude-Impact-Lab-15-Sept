@@ -1,0 +1,21 @@
+complaint_text,ground_truth_dept,ground_truth_category,ground_truth_urgency,ground_truth_ward,duplicate_group
+"Kolar Road Danish Kunj main drinking water pipeline leak ho gaya hai sadak par paani bhara hua hai.",Water Supply,Pipe Burst,HIGH,Kolar Road,dup_kolar_pipe
+"Kolar Road Danish Kunj main drinking water pipe leak ho gaya hai sadak par paani beh raha hai.",Water Supply,Pipe Burst,HIGH,Kolar Road,dup_kolar_pipe
+"Arera Colony E-2 dustbin se kachra overflow ho kar sadak par fail gaya hai bohot gandi smell hai.",Sanitation,Waste Collection,MEDIUM,Arera Colony,dup_arera_garbage
+"Arera Colony E-2 dustbin se garbage overflow ho kar sadak par fail gaya hai bohot gandi smell hai.",Sanitation,Waste Collection,MEDIUM,Arera Colony,dup_arera_garbage
+"Govindpura BHEL gate ke paas live electrical wire tut kar sadak par gira hai sparking ho rahi hai aag lagne ka darr hai.",Electricity,Hanging Live Wire,CRITICAL,Govindpura,
+"Shahpura lake road par deep open manhole bina dhakkan ke hai accident hone ka khatra hai.",Roads & Infrastructure,Open Manhole,CRITICAL,Shahpura,
+"MP Nagar Zone 1 me streetlights pichhle chaar din se band padi hain poora andhera rehta hai.",Electricity,Streetlight Outage,MEDIUM,MP Nagar,
+"TT Nagar Roshanpura chourahe par sadak par bohot bada gaddha ban gaya hai gaadiyan fisal rahi hain.",Roads & Infrastructure,Pothole,MEDIUM,TT Nagar,
+"Karond mandi ke paas sewage drain choke hone se ganda badboodar paani dukanon ke saamne beh raha hai.",Drainage & Sewage,Sewage Overflow,HIGH,Karond,
+"Bairagarh Halalpura bus stand ke paas awara kutto ka aatank hai jo paidal chalne walo par jhapatte hain.",Stray Animals,Dog Menace,MEDIUM,Bairagarh,
+"Ayodhya Bypass Minal residency ke paas dengue aur chikungunya ke bachav ke liye fogging karwaiye.",Public Health,Mosquito Fogging,MEDIUM,Ayodhya Bypass,
+"Old Bhopal Chowk Bazar me illegal shopkeepers ne footpath par kabza kar liya hai paidal chalne ki jagah nahi hai.",Encroachment,Footpath Blocked,LOW,Old Bhopal,
+"Katara Hills me pichhle 48 ghante se supply ka paani nahi aaya hai log pareshan hain tanker bheje.",Water Supply,Supply Interruption,HIGH,Katara Hills,
+"Jahangirabad police line ke paas dead dog pada hua hai subah se safai karwaye.",Sanitation,Dead Animal Removal,HIGH,Jahangirabad,
+"Hoshangabad Road Misrod par open drain me plastic kachra jama hone se nallah block ho gaya hai.",Drainage & Sewage,Clogged Drain,MEDIUM,Hoshangabad Road,
+"New Market Top 'N Town ke peeche transformer se loud humming aur sparking ho rahi hai.",Electricity,Sparking Transformer,HIGH,New Market,
+"Ashoka Garden 80 feet road par gay aur bail sadak ke beech me ghoomte hain traffic block hota hai.",Stray Animals,Cattle Traffic Hazard,LOW,Ashoka Garden,
+"Chuna Bhatti kaliasot dam ke paas illegal construction kar ke naali band kar di gayi hai.",Encroachment,Illegal Construction,LOW,Chuna Bhatti,
+"Gandhi Nagar airport road par barish ke paani se road par heavy waterlogging ho gayi hai gaddhe nahi dikhte.",Roads & Infrastructure,Waterlogging on Road,MEDIUM,Gandhi Nagar,
+"Koh-e-fiza VIP road par tap water bohot ganda aur peela aa raha hai peene yogya nahi hai.",Water Supply,Contaminated Water,HIGH,Koh-e-Fiza,

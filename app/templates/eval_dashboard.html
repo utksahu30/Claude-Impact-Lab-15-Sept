@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation Benchmark — Bhopal Civic Triage{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <div>
+    <h2>Held-Out Test Set Evaluation</h2>
+    <p>Honest, measured routing accuracy and duplicate precision/recall on ground-truth benchmark</p>
+  </div>
+  <form method="POST" action="/eval/run">
+    <button type="submit" class="btn btn-primary">▶ Run Full Benchmark Evaluation</button>
+  </form>
+</div>
+
+{% if eval_results %}
+<div class="grid-4" style="margin-bottom: 1.5rem;">
+  <div class="stat-card">
+    <div class="stat-value" style="color: #60a5fa;">{{ eval_results.llm_accuracy }}%</div>
+    <div class="stat-label">Qwen 3.8 Max Routing Accuracy</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-value" style="color: #a78bfa;">{{ eval_results.fallback_accuracy }}%</div>
+    <div class="stat-label">Deterministic Fallback Accuracy</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-value" style="color: #34d399;">{{ eval_results.duplicate_precision }}%</div>
+    <div class="stat-label">Duplicate Precision</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-value" style="color: #22d3ee;">{{ eval_results.duplicate_recall }}%</div>
+    <div class="stat-label">Duplicate Recall</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <span>Detailed Evaluation Records (Sample Size: N = {{ eval_results.total_cases }})</span>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Raw Complaint Text</th>
+          <th>Ground Truth Department</th>
+          <th>Predicted Department</th>
+          <th>Match?</th>
+          <th>Urgency (Actual / Pred)</th>
+          <th>Duplicate Group</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in eval_results.cases %}
+        <tr>
+          <td>{{ row.id }}</td>
+          <td style="font-size: 0.8rem; max-width: 250px;">{{ row.text }}</td>
+          <td><strong>{{ row.expected_dept }}</strong></td>
+          <td>
+            <strong style="color: {% if row.is_match %}#34d399{% else %}#f87171{% endif %};">
+              {{ row.predicted_dept }}
+            </strong>
+          </td>
+          <td>
+            {% if row.is_match %}
+            <span class="badge badge-triaged">MATCH</span>
+            {% else %}
+            <span class="badge badge-critical">MISMATCH</span>
+            {% endif %}
+          </td>
+          <td style="font-size: 0.75rem;">
+            {{ row.expected_urgency }} &rarr; {{ row.predicted_urgency }}
+          </td>
+          <td style="font-size: 0.75rem;">
+            {{ row.dup_group or '-' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 3rem;">
+  <p style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-secondary);">
+    Benchmark not yet run for this session.
+  </p>
+  <form method="POST" action="/eval/run">
+    <button type="submit" class="btn btn-primary">Run Benchmark on held_out_test.csv &rarr;</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

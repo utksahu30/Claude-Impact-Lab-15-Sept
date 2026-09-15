@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CSV Batch — Bhopal Civic Triage{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="margin-bottom: 1.5rem;">
+    <h2>CSV Complaint Ingestion</h2>
+    <p>Flexible ingestion supporting arbitrary municipal export schemas with automated encoding detection</p>
+  </div>
+
+  {% if error_msg %}
+  <div class="alert alert-danger">{{ error_msg }}</div>
+  {% endif %}
+
+  {% if success_batch %}
+  <div class="card" style="border-color: #10b981; margin-bottom: 1.5rem;">
+    <div class="card-title" style="color: #6ee7b7;">
+      <span>✓ Batch Ingestion Successful</span>
+      <span class="badge badge-approved">Batch: {{ success_batch.id }}</span>
+    </div>
+    <div class="grid-4" style="margin: 1rem 0;">
+      <div class="stat-card">
+        <div class="stat-value" style="color: #6ee7b7;">{{ success_batch.imported_rows }}</div>
+        <div class="stat-label">Tickets Imported</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #cbd5e1;">{{ success_batch.total_rows }}</div>
+        <div class="stat-label">Total Rows in File</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #c084fc;">{{ success_batch.duplicate_rows }}</div>
+        <div class="stat-label">Duplicates Skipped</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: #f87171;">{{ success_batch.error_rows }}</div>
+        <div class="stat-label">Row Errors</div>
+      </div>
+    </div>
+    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+      Encoding detected: <strong>{{ success_batch.encoding_detected }}</strong>
+      {% if success_batch.was_lossy %}
+      <span class="badge badge-critical" style="margin-left: 0.5rem;">Lossy Fallback Triggered</span>
+      {% else %}
+      <span class="badge badge-approved" style="margin-left: 0.5rem;">Lossless Clean Decode</span>
+      {% endif %}
+    </div>
+
+    {% if batch_errors %}
+    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 0.75rem; border-radius: 6px; font-size: 0.8rem; margin-bottom: 1rem;">
+      <strong>Row-Level Errors:</strong>
+      <ul style="margin-left: 1.25rem; margin-top: 0.25rem;">
+        {% for err in batch_errors[:5] %}
+        <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="/tickets" class="btn btn-primary">Go to Operator Queue &rarr;</a>
+      <a href="/upload" class="btn btn-secondary">Upload Another File</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if mapping_step %}
+  <!-- Step 2: Dynamic Column Mapping Selector -->
+  <div class="card">
+    <div class="card-title">
+      <span>Step 2: Map CSV Columns to Triage Fields</span>
+      <span class="badge" style="background: #1e3a8a; color: #93c5fd;">Encoding: {{ encoding_detected }}</span>
+    </div>
+
+    {% if was_lossy %}
+    <div class="alert alert-warning">
+      <strong>⚠️ Warning:</strong> Real charset detection was unable to cleanly identify encoding; lossy replacement was applied. Verify Devanagari/Hindi text below before committing.
+    </div>
+    {% endif %}
+
+    <p style="font-size: 0.85rem; margin-bottom: 1rem;">
+      Select which column in your CSV export corresponds to each engine input. This allows the engine to run against any new municipal export without changing code.
+    </p>
+
+    <!-- Sample Data Preview -->
+    <div style="margin-bottom: 1.5rem;">
+      <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">File Preview (First 3 Rows)</h4>
+      <div class="table-container" style="max-height: 200px;">
+        <table>
+          <thead>
+            <tr>
+              {% for h in headers %}
+              <th>{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in sample_rows %}
+            <tr>
+              {% for h in headers %}
+              <td style="font-size: 0.75rem;">{{ row.get(h, '') }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <form method="POST" action="/upload/confirm">
+      <input type="hidden" name="batch_id" value="{{ batch_id }}">
+      <input type="hidden" name="filename" value="{{ filename }}">
+      <input type="hidden" name="encoding_used" value="{{ encoding_detected }}">
+      <input type="hidden" name="was_lossy" value="{{ 'true' if was_lossy else 'false' }}">
+      <input type="hidden" name="temp_file_id" value="{{ temp_file_id }}">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" style="color: #6ee7b7;">Complaint Text Column (Required) *</label>
+          <select name="complaint_text_col" class="form-control" required>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['complaint', 'text', 'complaint_text', 'description', 'vivaran', 'details'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Source Channel Column (Optional)</label>
+          <select name="channel_col" class="form-control">
+            <option value="">-- None (Default: CSV Upload) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['channel', 'source', 'source_channel', 'medium'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Ward / Locality Column (Optional)</label>
+          <select name="ward_col" class="form-control">
+            <option value="">-- None (Auto-detect via Gazetteer) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['ward', 'locality', 'zone', 'area', 'prabhag'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Timestamp Column (Optional)</label>
+          <select name="timestamp_col" class="form-control">
+            <option value="">-- None (Default: Current Time) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['timestamp', 'date', 'created_at', 'time', 'samay'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <a href="/upload" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Ingest & Run AI Triage Pipeline &rarr;</button>
+      </div>
+    </form>
+  </div>
+
+  {% elif not success_batch %}
+  <!-- Step 1: Upload Form -->
+  <div class="card">
+    <div class="card-title">
+      <span>Upload Municipal Complaints CSV</span>
+    </div>
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label">Select CSV File (Max 10MB)</label>
+        <input type="file" name="file" accept=".csv" class="form-control" required style="padding: 0.75rem; border-style: dashed;">
+        <p style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-muted);">
+          Supports UTF-8, UTF-8-sig, and Windows-1252 Excel exports. The next screen will allow you to map columns.
+        </p>
+      </div>
+      <button type="submit" class="btn btn-primary">Upload & Preview Headers &rarr;</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

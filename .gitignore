@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+bhopal_triage.db
+bhopal_triage.db-wal
+bhopal_triage.db-shm
+.pytest_cache/
+.coverage
+htmlcov/

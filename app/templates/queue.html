@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket Queue — Bhopal Civic Triage{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <div>
+    <h2>Operator Intake Queue</h2>
+    <p>Human-in-the-loop triaging, verification, and acknowledgement dashboard</p>
+  </div>
+  <div style="display: flex; gap: 0.75rem;">
+    <a href="/upload" class="btn btn-primary">+ Ingest CSV Batch</a>
+    <a href="/admin/reset" onclick="return confirm('Reset database with synthetic Bhopal demo data?');" class="btn btn-secondary btn-sm">Reseed Demo Data</a>
+  </div>
+</div>
+
+<!-- Status Filter Pills -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+  <a href="/tickets" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %}">
+    All ({{ counts.total }})
+  </a>
+  <a href="/tickets?status=NEEDS_REVIEW" class="btn btn-sm {% if current_status == 'NEEDS_REVIEW' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #eab308; color: #fef08a;">
+    Needs Review ({{ counts.needs_review }})
+  </a>
+  <a href="/tickets?status=TRIAGED" class="btn btn-sm {% if current_status == 'TRIAGED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #10b981; color: #a7f3d0;">
+    Triaged ({{ counts.triaged }})
+  </a>
+  <a href="/tickets?status=APPROVED" class="btn btn-sm {% if current_status == 'APPROVED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #22c55e; color: #bbf7d0;">
+    Approved ({{ counts.approved }})
+  </a>
+  <a href="/tickets?status=RESOLVED" class="btn btn-sm {% if current_status == 'RESOLVED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #6366f1; color: #c7d2fe;">
+    Resolved ({{ counts.resolved }})
+  </a>
+</div>
+
+<!-- Ticket Table Card -->
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 70px;">ID</th>
+          <th style="width: 110px;">Urgency</th>
+          <th style="width: 130px;">Status</th>
+          <th>Sanitized Complaint</th>
+          <th>Department & Category</th>
+          <th style="width: 130px;">Ward</th>
+          <th style="width: 90px;">Confidence</th>
+          <th style="width: 120px;">Method</th>
+          <th style="width: 90px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if tickets %}
+          {% for t in tickets %}
+          <tr>
+            <td><strong>#{{ t.id }}</strong></td>
+            <td>
+              <span class="badge badge-{{ t.urgency|lower }}">
+                {{ t.urgency }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-{{ t.status|lower|replace('_', '-') }}">
+                {{ t.status }}
+              </span>
+            </td>
+            <td>
+              <div style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;" title="{{ t.sanitized_text }}">
+                {{ t.sanitized_text }}
+              </div>
+              <div style="display: flex; gap: 0.35rem; margin-top: 0.25rem;">
+                <span style="font-size: 0.7rem; color: var(--text-muted);">{{ t.source_channel }} &bull; {{ t.created_at.strftime('%d %b %H:%M') }}</span>
+                {% if t.id in duplicate_ticket_ids %}
+                <span class="badge badge-duplicate" style="font-size: 0.65rem;">Duplicate Cluster</span>
+                {% endif %}
+                {% if t.safety_floor_overridden %}
+                <span class="badge badge-critical" style="font-size: 0.65rem;" title="Safety floor downgraded by operator">Safety Downgraded</span>
+                {% endif %}
+              </div>
+            </td>
+            <td>
+              <strong style="color: var(--text-primary);">{{ t.department or 'Unassigned' }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ t.category or 'Unclassified' }}</div>
+            </td>
+            <td>
+              <span style="color: var(--text-primary);">{{ t.ward or 'UNKNOWN' }}</span>
+            </td>
+            <td>
+              <div style="font-weight: 600; font-size: 0.85rem;">{{ (t.confidence * 100)|round|int }}%</div>
+            </td>
+            <td>
+              {% if t.classification_method == 'fallback_rules' %}
+              <span class="badge badge-fallback" title="Classified by deterministic fallback rules">Fallback Active</span>
+              {% elif t.classification_method == 'llm' %}
+              <span class="badge" style="background: #1e3a8a; color: #93c5fd;">Qwen 3.8 Max</span>
+              {% elif t.classification_method == 'safety_override' %}
+              <span class="badge badge-critical">Safety Override</span>
+              {% else %}
+              <span style="color: var(--text-muted); font-size: 0.75rem;">None</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="/tickets/{{ t.id }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem;">Inspect &rarr;</a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+              <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tickets found in this queue.</p>
+              <a href="/upload" class="btn btn-primary btn-sm">Ingest a CSV Batch</a> or <a href="/admin/reset" class="btn btn-secondary btn-sm">Reseed Demo Data</a>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

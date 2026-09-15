@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id }} Inspector — Bhopal Civic Triage{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+  <a href="/tickets" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem;">&larr; Back to Ticket Queue</a>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <h2>Ticket #{{ ticket.id }}</h2>
+    <span class="badge badge-{{ ticket.status|lower|replace('_', '-') }}">{{ ticket.status }}</span>
+    <span class="badge badge-{{ ticket.urgency|lower }}">{{ ticket.urgency }}</span>
+    {% if ticket.classification_method == 'fallback_rules' %}
+    <span class="badge badge-fallback">Fallback Rules Active</span>
+    {% endif %}
+  </div>
+  
+  <div style="display: flex; gap: 0.5rem;">
+    {% if ticket.status in ['TRIAGED', 'NEEDS_REVIEW'] %}
+    <form method="POST" action="/tickets/{{ ticket.id }}/approve">
+      <button type="submit" class="btn btn-success">✓ Approve Routing & Draft</button>
+    </form>
+    {% elif ticket.status == 'APPROVED' %}
+    <form method="POST" action="/tickets/{{ ticket.id }}/resolve">
+      <button type="submit" class="btn btn-primary">Mark as Resolved</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if alert_msg %}
+<div class="alert alert-danger">{{ alert_msg }}</div>
+{% endif %}
+
+<div class="grid-2">
+  <!-- Left Column: Citizen Complaint & Metadata -->
+  <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+    <div class="card">
+      <div class="card-title">
+        <span>Citizen Complaint (Sanitized)</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Defensive PII Pass Complete</span>
+      </div>
+      
+      <!-- Highlighted Raw Text Container -->
+      <div style="background-color: var(--bg-primary); padding: 1rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+        {{ highlighted_text|safe }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8rem;">
+        <div>
+          <span style="color: var(--text-muted);">Source Channel:</span>
+          <strong>{{ ticket.source_channel }}</strong>
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">Received:</span>
+          <strong>{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">Batch ID:</span>
+          <code>{{ ticket.batch_id }}</code>
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">Idempotency Hash:</span>
+          <code style="font-size: 0.7rem;">{{ ticket.ticket_hash[:16] }}...</code>
+        </div>
+      </div>
+
+      {% if pii_meta %}
+      <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(59, 130, 246, 0.1); border-radius: 4px; font-size: 0.75rem; color: #93c5fd;">
+        <strong>Defensive PII Redactions:</strong>
+        Phones masked: {{ pii_meta.get('phone', 0) }}, Houses/Plots masked: {{ pii_meta.get('house_no', 0) }}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Duplicate Incident Cluster Card -->
+    {% if duplicate_tickets %}
+    <div class="card" style="border-color: #8b5cf6;">
+      <div class="card-title" style="color: #d8b4fe;">
+        <span>Duplicate Incident Cluster Detected</span>
+        <span class="badge badge-duplicate">{{ duplicate_tickets|length }} Linked</span>
+      </div>
+      <p style="font-size: 0.8rem; margin-bottom: 0.75rem;">
+        The char n-gram deduplication engine detected near-duplicate reports for this incident.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        {% for dt in duplicate_tickets %}
+        <div style="background: var(--bg-primary); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
+          <div>
+            <strong>#{{ dt.id }}</strong> &bull; <span class="badge badge-{{ dt.urgency|lower }}">{{ dt.urgency }}</span> &bull; {{ dt.sanitized_text[:50] }}...
+          </div>
+          <a href="/tickets/{{ dt.id }}" class="btn btn-secondary btn-sm" style="font-size: 0.7rem;">Inspect</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Explainability Panel: Why This Routing? -->
+    <div class="card">
+      <div class="card-title">
+        <span>Why This Routing? (Explainability)</span>
+      </div>
+      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+        <div>
+          <span style="color: var(--text-muted);">Classification Engine:</span>
+          <strong>{{ ticket.classification_method|upper }}</strong> (Prompt: {{ ticket.prompt_version or 'default' }})
+        </div>
+        <div>
+          <span style="color: var(--text-muted);">Extracted Reasoning Terms:</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.25rem;">
+            {% for term in reasoning_terms_list %}
+            <span class="highlight-term">{{ term }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% if safety_keywords_detected %}
+        <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; border-radius: 4px;">
+          <strong style="color: #f87171;">⚠️ Emergency Safety Keywords Fired:</strong>
+          <div style="display: flex; gap: 0.25rem; margin-top: 0.25rem;">
+            {% for kw in safety_keywords_detected %}
+            <span class="highlight-safety">{{ kw }}</span>
+            {% endfor %}
+          </div>
+          <div style="font-size: 0.75rem; color: #fca5a5; margin-top: 0.25rem;">
+            Safety Precedence Rule 1 enforced: Urgency elevated to CRITICAL.
+          </div>
+        </div>
+        {% endif %}
+
+        {% if ticket.safety_floor_overridden %}
+        <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; border-radius: 4px;">
+          <strong style="color: #fbbf24;">Audited Safety Downgrade:</strong>
+          <p style="font-size: 0.8rem; color: #fde68a; margin-top: 0.25rem;">
+            Reason recorded by operator: "<em>{{ ticket.override_reason }}</em>"
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Proposal, Overrides & Acknowledgement -->
+  <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+    <!-- AI Routing Proposal Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Triage Recommendation</span>
+        <span style="font-size: 0.8rem; font-weight: 600; color: #34d399;">
+          Confidence: {{ (ticket.confidence * 100)|round|int }}%
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+        <div>
+          <span class="form-label">Assigned Department</span>
+          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+            {{ ticket.department or 'UNASSIGNED' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Complaint Category</span>
+          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+            {{ ticket.category or 'Unclassified' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Normalized Ward</span>
+          <div style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">
+            {{ ticket.ward or 'UNKNOWN' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Urgency Level</span>
+          <div><span class="badge badge-{{ ticket.urgency|lower }}">{{ ticket.urgency }}</span></div>
+        </div>
+      </div>
+
+      <!-- Human-in-the-Loop Override Form -->
+      <form method="POST" action="/tickets/{{ ticket.id }}/override" style="border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-secondary);">Operator Override & Correction</h4>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-control">
+              {% for dept in taxonomy_departments %}
+              <option value="{{ dept }}" {% if ticket.department == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ward / Locality</label>
+            <input type="text" name="ward" value="{{ ticket.ward or '' }}" class="form-control" placeholder="e.g. MP Nagar, Arera Colony">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" name="category" value="{{ ticket.category or '' }}" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Urgency</label>
+            <select name="urgency" class="form-control">
+              <option value="CRITICAL" {% if ticket.urgency == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
+              <option value="HIGH" {% if ticket.urgency == 'HIGH' %}selected{% endif %}>HIGH</option>
+              <option value="MEDIUM" {% if ticket.urgency == 'MEDIUM' %}selected{% endif %}>MEDIUM</option>
+              <option value="LOW" {% if ticket.urgency == 'LOW' %}selected{% endif %}>LOW</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Audited Reason if downgrading safety urgency -->
+        <div class="form-group" style="background: rgba(245, 158, 11, 0.05); padding: 0.75rem; border-radius: 6px; border: 1px dashed var(--border-color);">
+          <label class="form-label" style="color: #fde047;">
+            Audited Reason (Required only if downgrading a CRITICAL safety ticket to Medium/Low):
+          </label>
+          <input type="text" name="override_reason" class="form-control" placeholder="e.g., Verified small controlled drill, no live hazard" value="{{ ticket.override_reason or '' }}">
+        </div>
+
+        <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Apply Human Override</button>
+      </form>
+    </div>
+
+    <!-- Citizen Acknowledgement Draft Card -->
+    <div class="card">
+      <div class="card-title">
+        <span>Citizen Acknowledgement Draft</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">Bilingual Ready</span>
+      </div>
+
+      <form method="POST" action="/tickets/{{ ticket.id }}/approve">
+        <div class="form-group">
+          <label class="form-label">English Acknowledgement Draft</label>
+          <textarea name="ack_draft_en" class="form-control" rows="3">{{ ticket.ack_draft_en or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hindi Acknowledgement Draft (हिंदी पावती प्रारूप)</label>
+          <textarea name="ack_draft_hi" class="form-control" rows="3">{{ ticket.ack_draft_hi or '' }}</textarea>
+        </div>
+
+        {% if ticket.status in ['TRIAGED', 'NEEDS_REVIEW'] %}
+        <button type="submit" class="btn btn-success" style="width: 100%;">
+          ✓ Confirm & Lock Acknowledgement Draft
+        </button>
+        {% elif ticket.status == 'APPROVED' %}
+        <div class="alert alert-success" style="margin-bottom: 0; text-align: center;">
+          ✓ Acknowledgement Locked for Official Dispatch (Status: APPROVED)
+        </div>
+        {% elif ticket.status == 'RESOLVED' %}
+        <div class="alert alert-success" style="margin-bottom: 0; text-align: center;">
+          Resolved on {{ ticket.resolved_at.strftime('%Y-%m-%d %H:%M') if ticket.resolved_at else 'N/A' }}
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

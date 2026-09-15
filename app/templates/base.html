@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Bhopal Civic Triage Engine{% endblock %}</title>
+  <!-- Vendored Local Static Assets - Zero CDN Runtime Dependency -->
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body hx-headers='{"X-Demo-Token": "{{ demo_token }}"}'>
+  <header>
+    <div class="nav-container">
+      <a href="/tickets" class="brand">
+        <span class="brand-badge">BMC PS-5</span>
+        Bhopal Civic Triage Engine
+      </a>
+      <nav class="nav-links">
+        <a href="/tickets" class="nav-link {% if active_page == 'tickets' %}active{% endif %}">Ticket Queue</a>
+        <a href="/upload" class="nav-link {% if active_page == 'upload' %}active{% endif %}">Upload CSV</a>
+        <a href="/digest" class="nav-link {% if active_page == 'digest' %}active{% endif %}">Weekly Digest</a>
+        <a href="/eval" class="nav-link {% if active_page == 'eval' %}active{% endif %}">Evaluation Benchmark</a>
+        
+        {% if allow_external_ai %}
+        <span class="status-badge" title="AI Triage Active via Qwen 3.8 Max">
+          <span class="status-dot"></span> Qwen 3.8 Max Active
+        </span>
+        {% else %}
+        <span class="status-badge offline" title="Running in Offline Deterministic Fallback Mode">
+          <span class="status-dot"></span> Offline Fallback Active
+        </span>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 2rem;">
+    Bhopal Municipal Corporation &bull; PS-5 Civic Triage Engine &bull; Qwen 3.8 Max &bull; Resilient Offline Architecture
+  </footer>
+</body>
+</html>
