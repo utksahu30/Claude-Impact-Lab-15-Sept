@@ -5,7 +5,7 @@ echo "========================================================"
 echo " Starting CivicTrace Bhopal - Municipal Triage Engine   "
 echo "========================================================"
 
-PORT="${PORT:-8000}"
+PORT="${PORT:-7860}"
 DB_PATH="${DATABASE_URL:-sqlite:///bhopal_triage.db}"
 
 echo "[INFO] Target Port: $PORT"
