@@ -1,115 +1,256 @@
 {% extends "base.html" %}
 
-{% block title %}Ticket Queue — Bhopal Civic Triage{% endblock %}
+{% block title %}Ticket Queue &bull; CivicTrace Bhopal{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<!-- AgriTrace Hero Banner -->
+<div class="hero-banner">
   <div>
-    <h2>Operator Intake Queue</h2>
-    <p>Human-in-the-loop triaging, verification, and acknowledgement dashboard</p>
+    <div class="hero-tag">
+      <span>MUNICIPAL & INTAKE OVERSIGHT HUB</span> &bull; <span>Authority: Bhopal Municipal Corporation & State CM Helpline (181)</span>
+    </div>
+    <h1 class="hero-title">Civic Intake & Complaint Triage Sentinel</h1>
+    <p class="hero-description">
+      Real-time automated routing powered by Qwen 3.8 Max, RapidFuzz geo-spatial ward normalization, deterministic safety floor enforcement, and n-gram deduplication clustering.
+    </p>
   </div>
-  <div style="display: flex; gap: 0.75rem;">
-    <a href="/upload" class="btn btn-primary">+ Ingest CSV Batch</a>
-    <a href="/admin/reset" onclick="return confirm('Reset database with synthetic Bhopal demo data?');" class="btn btn-secondary btn-sm">Reseed Demo Data</a>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+    <a href="/upload" class="btn-neo btn-neo-black">+ Ingest CSV Batch</a>
+    <a href="/eval" class="btn-neo btn-neo-white">🧪 Benchmark</a>
   </div>
 </div>
 
-<!-- Status Filter Pills -->
-<div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
-  <a href="/tickets" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %}">
-    All ({{ counts.total }})
-  </a>
-  <a href="/tickets?status=NEEDS_REVIEW" class="btn btn-sm {% if current_status == 'NEEDS_REVIEW' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #eab308; color: #fef08a;">
-    Needs Review ({{ counts.needs_review }})
-  </a>
-  <a href="/tickets?status=TRIAGED" class="btn btn-sm {% if current_status == 'TRIAGED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #10b981; color: #a7f3d0;">
-    Triaged ({{ counts.triaged }})
-  </a>
-  <a href="/tickets?status=APPROVED" class="btn btn-sm {% if current_status == 'APPROVED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #22c55e; color: #bbf7d0;">
-    Approved ({{ counts.approved }})
-  </a>
-  <a href="/tickets?status=RESOLVED" class="btn btn-sm {% if current_status == 'RESOLVED' %}btn-primary{% else %}btn-secondary{% endif %}" style="border-color: #6366f1; color: #c7d2fe;">
-    Resolved ({{ counts.resolved }})
-  </a>
+<!-- AgriTrace 4-Stat Grid -->
+<div class="stat-grid-4">
+  <div class="stat-box">
+    <div class="stat-label-top">Total Intake Tickets</div>
+    <div class="stat-number">{{ counts.total }}</div>
+    <div class="stat-footer-text">
+      <span>🏛️ Multi-Channel BMC Intake</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Triaged & Ready</div>
+    <div class="stat-number" style="color: var(--accent-green);">{{ counts.triaged }}</div>
+    <div class="stat-footer-text">
+      <span>⚡ High-Confidence Automated Routing</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Needs Human Review</div>
+    <div class="stat-number" style="color: var(--accent-amber);">{{ counts.needs_review }}</div>
+    <div class="stat-footer-text">
+      <span>⚠️ Sub-threshold / Ambiguous Lots</span>
+    </div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Resolved Complaints</div>
+    <div class="stat-number" style="color: var(--accent-blue);">{{ counts.resolved }}</div>
+    <div class="stat-footer-text">
+      <span>✓ Verified Field Resolution</span>
+    </div>
+  </div>
 </div>
 
-<!-- Ticket Table Card -->
-<div class="card" style="padding: 0; overflow: hidden;">
+<!-- AgriTrace Feature Strip -->
+<div class="feature-strip">
+  <div class="feature-pill">
+    <div class="feature-pill-icon">🏛️</div>
+    <div>
+      <div class="feature-pill-title">RapidFuzz Gazetteer</div>
+      <div class="feature-pill-desc">20 Ward Geo-Spatial Normalization</div>
+    </div>
+  </div>
+
+  <div class="feature-pill">
+    <div class="feature-pill-icon">⚡</div>
+    <div>
+      <div class="feature-pill-title">Qwen 3.8 Max Engine</div>
+      <div class="feature-pill-desc">Zero-Shot Reasoning & Hindi/English Ack</div>
+    </div>
+  </div>
+
+  <div class="feature-pill">
+    <div class="feature-pill-icon">🔒</div>
+    <div>
+      <div class="feature-pill-title">SHA-256 Idempotency</div>
+      <div class="feature-pill-desc">N-Gram Duplicate Prevention & Clustering</div>
+    </div>
+  </div>
+
+  <div class="feature-pill">
+    <div class="feature-pill-icon">🛡️</div>
+    <div>
+      <div class="feature-pill-title">Safety Sentinel</div>
+      <div class="feature-pill-desc">Rule 1 Critical Hazard Urgency Floor</div>
+    </div>
+  </div>
+</div>
+
+<!-- AgriTrace Role Switcher ("SWITCH OPERATOR VIEW") -->
+<div class="section-heading-center">
+  <h2>Switch Operator View</h2>
+  <p>Jump directly to specialized workflows for Intake, Queue Triage, Zonal Oversight, and Quality Auditing.</p>
+</div>
+
+<div class="role-grid">
+  <!-- Desk Operator -->
+  <div class="role-card">
+    <div class="role-badge-top">PRIMARY</div>
+    <div class="role-icon-box" style="background-color: var(--accent-green-bg);">📋</div>
+    <div class="role-title">Desk Operator</div>
+    <div class="role-desc">
+      Inspect incoming complaints, audit reasoning keywords, apply manual overrides, and lock citizen drafts.
+    </div>
+    <a href="#intake-queue" class="btn-neo btn-neo-black">Go to Queue</a>
+  </div>
+
+  <!-- Zone Officer -->
+  <div class="role-card">
+    <div class="role-badge-top">EXECUTIVE</div>
+    <div class="role-icon-box" style="background-color: var(--accent-amber-bg);">📊</div>
+    <div class="role-title">Zone Officer</div>
+    <div class="role-desc">
+      Review 30-day departmental SLA performance, median resolution times, and audited safety downgrades.
+    </div>
+    <a href="/digest" class="btn-neo btn-neo-white">Go to Digest</a>
+  </div>
+
+  <!-- Data Intake -->
+  <div class="role-card">
+    <div class="role-badge-top">INGESTION</div>
+    <div class="role-icon-box" style="background-color: var(--accent-blue-bg);">📤</div>
+    <div class="role-title">Intake Officer</div>
+    <div class="role-desc">
+      Ingest arbitrary CSV exports with charset-normalizer encoding detection and dynamic column mapping.
+    </div>
+    <a href="/upload" class="btn-neo btn-neo-white">Go to Ingest</a>
+  </div>
+
+  <!-- Quality Auditor -->
+  <div class="role-card">
+    <div class="role-badge-top">AUDIT HUB</div>
+    <div class="role-icon-box" style="background-color: var(--accent-purple-bg);">🧪</div>
+    <div class="role-title">Quality Lead</div>
+    <div class="role-desc">
+      Benchmark held-out test set accuracy, measure duplicate precision/recall, and inspect LLM vs Fallback.
+    </div>
+    <a href="/eval" class="btn-neo btn-neo-white">Audit Benchmark</a>
+  </div>
+</div>
+
+<!-- Filter Tabs & Main Intake Table -->
+<div id="intake-queue" class="card-neo" style="padding: 1.25rem;">
+  <div class="card-header-banner">
+    <div class="card-header-title">
+      <span>🛡️ Operator Intake & Classification Sentinel</span>
+    </div>
+    <div>
+      <span class="badge-neo badge-triaged">{{ counts.total }} Total In Queue</span>
+    </div>
+  </div>
+
+  <!-- Status Filter Tabs -->
+  <div class="filter-tabs">
+    <a href="/tickets#intake-queue" class="filter-tab {% if not current_status %}active{% endif %}">
+      ALL ({{ counts.total }})
+    </a>
+    <a href="/tickets?status=NEEDS_REVIEW#intake-queue" class="filter-tab {% if current_status == 'NEEDS_REVIEW' %}active{% endif %}">
+      NEEDS REVIEW ({{ counts.needs_review }})
+    </a>
+    <a href="/tickets?status=TRIAGED#intake-queue" class="filter-tab {% if current_status == 'TRIAGED' %}active{% endif %}">
+      TRIAGED ({{ counts.triaged }})
+    </a>
+    <a href="/tickets?status=APPROVED#intake-queue" class="filter-tab {% if current_status == 'APPROVED' %}active{% endif %}">
+      APPROVED ({{ counts.approved }})
+    </a>
+    <a href="/tickets?status=RESOLVED#intake-queue" class="filter-tab {% if current_status == 'RESOLVED' %}active{% endif %}">
+      RESOLVED ({{ counts.resolved }})
+    </a>
+  </div>
+
+  <!-- Table Component -->
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th style="width: 70px;">ID</th>
-          <th style="width: 110px;">Urgency</th>
-          <th style="width: 130px;">Status</th>
-          <th>Sanitized Complaint</th>
-          <th>Department & Category</th>
-          <th style="width: 130px;">Ward</th>
-          <th style="width: 90px;">Confidence</th>
-          <th style="width: 120px;">Method</th>
-          <th style="width: 90px;">Actions</th>
+          <th style="width: 75px;">TICKET ID</th>
+          <th style="width: 105px;">URGENCY</th>
+          <th style="width: 125px;">STATUS</th>
+          <th>SANITIZED COMPLAINT</th>
+          <th>DEPARTMENT & CATEGORY</th>
+          <th style="width: 130px;">WARD</th>
+          <th style="width: 85px;">CONFIDENCE</th>
+          <th style="width: 130px;">TRIAGE METHOD</th>
+          <th style="width: 90px;">ACTION</th>
         </tr>
       </thead>
       <tbody>
         {% if tickets %}
           {% for t in tickets %}
           <tr>
-            <td><strong>#{{ t.id }}</strong></td>
+            <td class="font-mono"><strong>#{{ t.id }}</strong></td>
             <td>
-              <span class="badge badge-{{ t.urgency|lower }}">
+              <span class="badge-neo badge-{{ t.urgency|lower }}">
                 {{ t.urgency }}
               </span>
             </td>
             <td>
-              <span class="badge badge-{{ t.status|lower|replace('_', '-') }}">
+              <span class="badge-neo badge-{{ t.status|lower|replace('_', '-') }}">
                 {{ t.status }}
               </span>
             </td>
             <td>
-              <div style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem;" title="{{ t.sanitized_text }}">
+              <div style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.85rem; font-weight: 600;" title="{{ t.sanitized_text }}">
                 {{ t.sanitized_text }}
               </div>
-              <div style="display: flex; gap: 0.35rem; margin-top: 0.25rem;">
-                <span style="font-size: 0.7rem; color: var(--text-muted);">{{ t.source_channel }} &bull; {{ t.created_at.strftime('%d %b %H:%M') }}</span>
+              <div style="display: flex; gap: 0.4rem; margin-top: 0.35rem; align-items: center; flex-wrap: wrap;">
+                <span class="font-mono" style="font-size: 0.7rem; color: var(--text-muted);">{{ t.source_channel }} &bull; {{ t.created_at.strftime('%d %b %H:%M') }}</span>
                 {% if t.id in duplicate_ticket_ids %}
-                <span class="badge badge-duplicate" style="font-size: 0.65rem;">Duplicate Cluster</span>
+                <span class="badge-neo badge-duplicate" style="font-size: 0.65rem;">Duplicate Cluster</span>
                 {% endif %}
                 {% if t.safety_floor_overridden %}
-                <span class="badge badge-critical" style="font-size: 0.65rem;" title="Safety floor downgraded by operator">Safety Downgraded</span>
+                <span class="badge-neo badge-critical" style="font-size: 0.65rem;" title="Safety floor downgraded by operator">Safety Downgraded</span>
                 {% endif %}
               </div>
             </td>
             <td>
-              <strong style="color: var(--text-primary);">{{ t.department or 'Unassigned' }}</strong>
-              <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ t.category or 'Unclassified' }}</div>
+              <strong style="color: var(--text-main); font-size: 0.85rem;">{{ t.department or 'Unassigned' }}</strong>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">{{ t.category or 'Unclassified' }}</div>
             </td>
             <td>
-              <span style="color: var(--text-primary);">{{ t.ward or 'UNKNOWN' }}</span>
+              <span class="font-mono" style="font-size: 0.8rem; font-weight: 700;">{{ t.ward or 'UNKNOWN' }}</span>
             </td>
             <td>
-              <div style="font-weight: 600; font-size: 0.85rem;">{{ (t.confidence * 100)|round|int }}%</div>
+              <div class="font-mono" style="font-weight: 800; font-size: 0.9rem;">{{ (t.confidence * 100)|round|int }}%</div>
             </td>
             <td>
               {% if t.classification_method == 'fallback_rules' %}
-              <span class="badge badge-fallback" title="Classified by deterministic fallback rules">Fallback Active</span>
+              <span class="badge-neo badge-fallback" title="Classified by deterministic fallback rules">Fallback Active</span>
               {% elif t.classification_method == 'llm' %}
-              <span class="badge" style="background: #1e3a8a; color: #93c5fd;">Qwen 3.8 Max</span>
+              <span class="badge-neo" style="background-color: var(--accent-blue-bg); color: var(--accent-blue); border-color: var(--accent-blue);">Qwen 3.8 Max</span>
               {% elif t.classification_method == 'safety_override' %}
-              <span class="badge badge-critical">Safety Override</span>
+              <span class="badge-neo badge-critical">Safety Override</span>
               {% else %}
               <span style="color: var(--text-muted); font-size: 0.75rem;">None</span>
               {% endif %}
             </td>
             <td>
-              <a href="/tickets/{{ t.id }}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem;">Inspect &rarr;</a>
+              <a href="/tickets/{{ t.id }}" class="btn-neo btn-neo-white btn-neo-sm">Inspect</a>
             </td>
           </tr>
           {% endfor %}
         {% else %}
           <tr>
-            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
-              <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tickets found in this queue.</p>
-              <a href="/upload" class="btn btn-primary btn-sm">Ingest a CSV Batch</a> or <a href="/admin/reset" class="btn btn-secondary btn-sm">Reseed Demo Data</a>
+            <td colspan="9" style="text-align: center; padding: 3.5rem 1rem;">
+              <p style="font-size: 1.1rem; font-weight: 800; margin-bottom: 0.75rem;">No tickets found matching this filter.</p>
+              <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <a href="/upload" class="btn-neo btn-neo-black btn-neo-sm">+ Ingest CSV Batch</a>
+                <a href="/admin/reset" class="btn-neo btn-neo-white btn-neo-sm">↺ Reseed Demo Data</a>
+              </div>
             </td>
           </tr>
         {% endif %}
@@ -118,3 +259,4 @@
   </div>
 </div>
 {% endblock %}
+

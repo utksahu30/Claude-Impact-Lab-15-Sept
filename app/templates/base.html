@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Bhopal Civic Triage Engine{% endblock %}</title>
+  <title>{% block title %}CivicTrace &bull; Bhopal Municipal Triage{% endblock %}</title>
   <!-- Vendored Local Static Assets - Zero CDN Runtime Dependency -->
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js"></script>
@@ -11,26 +11,31 @@
 <body hx-headers='{"X-Demo-Token": "{{ demo_token }}"}'>
   <header>
     <div class="nav-container">
-      <a href="/tickets" class="brand">
-        <span class="brand-badge">BMC PS-5</span>
-        Bhopal Civic Triage Engine
+      <a href="/tickets" class="brand-group">
+        <div class="brand-icon">🏛️</div>
+        <div class="brand-text">
+          <span class="brand-title">CivicTrace</span>
+          <span class="brand-subtitle">Digital Municipal Mission</span>
+        </div>
       </a>
-      <nav class="nav-links">
-        <a href="/tickets" class="nav-link {% if active_page == 'tickets' %}active{% endif %}">Ticket Queue</a>
-        <a href="/upload" class="nav-link {% if active_page == 'upload' %}active{% endif %}">Upload CSV</a>
-        <a href="/digest" class="nav-link {% if active_page == 'digest' %}active{% endif %}">Weekly Digest</a>
-        <a href="/eval" class="nav-link {% if active_page == 'eval' %}active{% endif %}">Evaluation Benchmark</a>
-        
+
+      <div class="tech-capsule">
         {% if allow_external_ai %}
-        <span class="status-badge" title="AI Triage Active via Qwen 3.8 Max">
-          <span class="status-dot"></span> Qwen 3.8 Max Active
-        </span>
+        <span class="status-dot-active"></span>
+        <span>Engine: <strong style="color: var(--accent-green);">Active</strong> | Model: <strong>Qwen 3.8 Max</strong> | SHA-256 Idempotency</span>
         {% else %}
-        <span class="status-badge offline" title="Running in Offline Deterministic Fallback Mode">
-          <span class="status-dot"></span> Offline Fallback Active
-        </span>
+        <span class="status-dot-offline"></span>
+        <span>Engine: <strong style="color: var(--accent-red);">Fallback</strong> | Model: <strong>Deterministic Rulebook</strong> | 100% Offline</span>
         {% endif %}
-      </nav>
+      </div>
+
+      <div class="nav-actions">
+        <a href="/tickets" class="nav-btn {% if active_page == 'tickets' %}active{% endif %}">Queue</a>
+        <a href="/upload" class="nav-btn {% if active_page == 'upload' %}active{% endif %}">Ingest</a>
+        <a href="/digest" class="nav-btn {% if active_page == 'digest' %}active{% endif %}">Digest</a>
+        <a href="/eval" class="nav-btn {% if active_page == 'eval' %}active{% endif %}">Benchmark</a>
+        <a href="/admin/reset" onclick="return confirm('Reset database with synthetic Bhopal civic complaints demo data?');" class="nav-btn nav-btn-black">↺ Reset Data</a>
+      </div>
     </div>
   </header>
 
@@ -38,8 +43,8 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer style="text-align: center; padding: 1.5rem; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 2rem;">
-    Bhopal Municipal Corporation &bull; PS-5 Civic Triage Engine &bull; Qwen 3.8 Max &bull; Resilient Offline Architecture
+  <footer style="text-align: center; padding: 2rem 1rem; font-size: 0.8rem; color: var(--text-muted); border-top: 2px solid var(--border-dark); background-color: #ffffff; margin-top: 3rem;">
+    <strong>CivicTrace Bhopal</strong> &bull; PS-5 Civic Triage & Departmental Accountability &bull; Powered by Qwen 3.8 Max &bull; 100% Deterministic Fallback Guaranteed
   </footer>
 </body>
 </html>

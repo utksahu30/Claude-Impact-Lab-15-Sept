@@ -1,82 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Weekly Municipal Digest — Bhopal Civic Triage{% endblock %}
+{% block title %}Weekly Municipal Digest &bull; CivicTrace Bhopal{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+<!-- AgriTrace Hero Banner -->
+<div class="hero-banner">
   <div>
-    <h2>Bhopal Municipal Corporation &bull; Weekly Civic Digest</h2>
-    <p>Zonal Office Executive Operational Summary (Reporting Period: Last 30 Days)</p>
+    <div class="hero-tag">
+      <span>REGULATORY & OVERSIGHT HUB</span> &bull; <span>Authority: Bhopal Municipal Corporation Zonal Office</span>
+    </div>
+    <h1 class="hero-title">Municipal SLA & Departmental Oversight</h1>
+    <p class="hero-description">
+      Real-time operational visibility, 30-day departmental intake, median resolution hours (resolved tickets only), and mandatory safety floor downgrade audit logging.
+    </p>
   </div>
-  <div style="display: flex; gap: 0.75rem;" class="no-print">
-    <button onclick="window.print()" class="btn btn-secondary">🖨️ Print Report</button>
-    <a href="/digest/export.csv" class="btn btn-primary">⬇️ Download Safe CSV Export</a>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" class="no-print">
+    <button onclick="window.print()" class="btn-neo btn-neo-white">🖨️ Print Executive Report</button>
+    <a href="/digest/export.csv" class="btn-neo btn-neo-black">⬇️ Download Safe CSV Export</a>
   </div>
 </div>
 
-<!-- KPI Cards -->
-<div class="grid-4" style="margin-bottom: 1.5rem;">
-  <div class="stat-card">
-    <div class="stat-value" style="color: #60a5fa;">{{ metrics.total_tickets }}</div>
-    <div class="stat-label">Total Complaints Processed</div>
+<!-- AgriTrace 4-Stat Grid -->
+<div class="stat-grid-4">
+  <div class="stat-box">
+    <div class="stat-label-top">Total Intake Processed</div>
+    <div class="stat-number">{{ metrics.total_tickets }}</div>
+    <div class="stat-footer-text">Last 30-Day Multi-Channel Intake</div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-value" style="color: #34d399;">
-      {{ metrics.overall_median_resolution_hours }} <span style="font-size: 1rem; font-weight: 500;">hrs</span>
+  <div class="stat-box">
+    <div class="stat-label-top">Median Resolution Time</div>
+    <div class="stat-number" style="color: var(--accent-green);">
+      {{ metrics.overall_median_resolution_hours }} <span style="font-size: 1.1rem; font-weight: 700;">hrs</span>
     </div>
-    <div class="stat-label">Median Resolution Time (Resolved Only)</div>
+    <div class="stat-footer-text">Resolved Complaints Only</div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-value" style="color: #fbbf24;">
-      {{ metrics.override_rate }}%
-    </div>
-    <div class="stat-label">Human Override Rate ({{ metrics.human_override_count }} tickets)</div>
+  <div class="stat-box">
+    <div class="stat-label-top">Human Override Rate</div>
+    <div class="stat-number" style="color: var(--accent-amber);">{{ metrics.override_rate }}%</div>
+    <div class="stat-footer-text">{{ metrics.human_override_count }} Tickets Corrected by Operator</div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-value" style="color: {% if metrics.ai_failure_rate > 5 %}#f87171{% else %}#a7f3d0{% endif %};">
+  <div class="stat-box">
+    <div class="stat-label-top">AI Failure Rate</div>
+    <div class="stat-number" style="color: {% if metrics.ai_failure_rate > 5 %}var(--accent-red){% else %}var(--accent-green){% endif %};">
       {{ metrics.ai_failure_rate }}%
     </div>
-    <div class="stat-label">AI Failure Rate ({{ metrics.ai_failed_count }} fallback handled)</div>
+    <div class="stat-footer-text">{{ metrics.ai_failed_count }} Deterministic Fallbacks Handled</div>
   </div>
 </div>
 
 <!-- Department Breakdown -->
-<div class="card" style="margin-bottom: 1.5rem;">
-  <div class="card-title">
-    <span>Department Intake & SLA Performance</span>
+<div class="card-neo" style="margin-bottom: 2rem;">
+  <div class="card-header-banner">
+    <div class="card-header-title">
+      <span>🏛️ Department Intake & SLA Performance Matrix</span>
+    </div>
+    <span class="badge-neo badge-approved">Zone-Level Accountability</span>
   </div>
+
   <div class="table-container">
     <table>
       <thead>
         <tr>
-          <th>Department</th>
-          <th>Total Complaints</th>
-          <th>Resolved Volume</th>
-          <th>Median Resolution (Hrs)</th>
-          <th>Urgency Profile (C / H / M / L)</th>
+          <th>DEPARTMENT</th>
+          <th>TOTAL COMPLAINTS</th>
+          <th>RESOLVED VOLUME</th>
+          <th>MEDIAN RESOLUTION (HRS)</th>
+          <th>URGENCY PROFILE (C / H / M / L)</th>
         </tr>
       </thead>
       <tbody>
         {% for dept, data in metrics.department_breakdown.items() %}
         <tr>
-          <td><strong>{{ dept }}</strong></td>
-          <td>{{ data.total_tickets }}</td>
-          <td>{{ data.resolved_count }}</td>
+          <td><strong style="color: var(--text-main); font-size: 0.9rem;">{{ dept }}</strong></td>
+          <td class="font-mono" style="font-weight: 700;">{{ data.total_tickets }}</td>
+          <td class="font-mono">{{ data.resolved_count }}</td>
           <td>
             {% if data.median_resolution_hours %}
-            <strong style="color: #34d399;">{{ data.median_resolution_hours }} hrs</strong>
+            <strong class="font-mono" style="color: var(--accent-green); font-size: 0.95rem;">{{ data.median_resolution_hours }} hrs</strong>
             {% else %}
-            <span style="color: var(--text-muted);">None resolved yet</span>
+            <span style="color: var(--text-muted); font-size: 0.775rem;">None resolved yet</span>
             {% endif %}
           </td>
           <td>
-            <span class="badge badge-critical" style="font-size: 0.65rem;">{{ data.urgency_counts.get('CRITICAL', 0) }}</span>
-            <span class="badge badge-high" style="font-size: 0.65rem;">{{ data.urgency_counts.get('HIGH', 0) }}</span>
-            <span class="badge badge-medium" style="font-size: 0.65rem;">{{ data.urgency_counts.get('MEDIUM', 0) }}</span>
-            <span class="badge badge-low" style="font-size: 0.65rem;">{{ data.urgency_counts.get('LOW', 0) }}</span>
+            <div style="display: flex; gap: 0.25rem;">
+              <span class="badge-neo badge-critical" style="font-size: 0.65rem;">{{ data.urgency_counts.get('CRITICAL', 0) }}</span>
+              <span class="badge-neo badge-high" style="font-size: 0.65rem;">{{ data.urgency_counts.get('HIGH', 0) }}</span>
+              <span class="badge-neo badge-medium" style="font-size: 0.65rem;">{{ data.urgency_counts.get('MEDIUM', 0) }}</span>
+              <span class="badge-neo badge-low" style="font-size: 0.65rem;">{{ data.urgency_counts.get('LOW', 0) }}</span>
+            </div>
           </td>
         </tr>
         {% endfor %}
@@ -86,12 +100,16 @@
 </div>
 
 <!-- Audited Safety Overrides -->
-<div class="card">
-  <div class="card-title" style="color: #fca5a5;">
-    <span>Audited Safety-Floor Downgrades ({{ metrics.safety_floor_overrides }})</span>
+<div class="card-neo">
+  <div class="card-header-banner" style="background-color: var(--accent-amber-bg);">
+    <div class="card-header-title" style="color: var(--accent-amber);">
+      <span>⚠️ Audited Safety-Floor Downgrades ({{ metrics.safety_floor_overrides }})</span>
+    </div>
+    <span class="badge-neo badge-high">Precedence Compliance</span>
   </div>
-  <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-    Every operator action lowering a safety-critical ticket's urgency requires an explicit, audited reason.
+
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+    Every operator action lowering a safety-critical hazard ticket below CRITICAL requires an explicit, audited written justification.
   </p>
 
   {% if metrics.safety_floor_audit_list %}
@@ -99,30 +117,33 @@
     <table>
       <thead>
         <tr>
-          <th>Ticket</th>
-          <th>Date</th>
-          <th>Ward</th>
-          <th>Resulting Urgency</th>
-          <th>Mandatory Operator Justification</th>
+          <th>TICKET ID</th>
+          <th>TIMESTAMP</th>
+          <th>WARD</th>
+          <th>RESULTING URGENCY</th>
+          <th>MANDATORY OPERATOR JUSTIFICATION</th>
         </tr>
       </thead>
       <tbody>
         {% for item in metrics.safety_floor_audit_list %}
         <tr>
-          <td><strong>#{{ item.id }}</strong></td>
-          <td>{{ item.created_at }}</td>
-          <td>{{ item.ward }}</td>
-          <td><span class="badge badge-{{ item.urgency|lower }}">{{ item.urgency }}</span></td>
-          <td style="color: #fde68a;"><em>"{{ item.reason }}"</em></td>
+          <td class="font-mono"><strong>#{{ item.id }}</strong></td>
+          <td class="font-mono" style="font-size: 0.8rem;">{{ item.created_at }}</td>
+          <td class="font-mono" style="font-weight: 700;">{{ item.ward }}</td>
+          <td><span class="badge-neo badge-{{ item.urgency|lower }}">{{ item.urgency }}</span></td>
+          <td style="font-size: 0.85rem; font-weight: 600; color: #92400e;">
+            <em>"{{ item.reason }}"</em>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% else %}
-  <div style="font-size: 0.85rem; color: var(--text-muted); padding: 1rem; text-align: center;">
-    No safety-critical tickets have been downgraded by operators. Precedence rules intact.
+  <div style="font-size: 0.9rem; font-weight: 600; color: var(--accent-green); padding: 1.5rem; text-align: center; background-color: var(--accent-green-bg); border: 1.5px solid var(--accent-green);">
+    ✓ Zero safety-critical tickets have been downgraded by operators. Precedence floor fully enforced.
   </div>
   {% endif %}
 </div>
 {% endblock %}
+
