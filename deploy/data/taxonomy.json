@@ -1,0 +1,104 @@
+{
+  "departments": [
+    {
+      "name": "Water Supply",
+      "name_hi": "जल प्रदाय विभाग",
+      "categories": [
+        "Supply Interruption",
+        "Pipe Burst",
+        "Contaminated Water",
+        "Low Pressure",
+        "Illegal Connection"
+      ],
+      "keywords": ["water", "paani", "pipe", "leak", "supply", "tonti", "nal", "tanker", "ganda paani", "pressure", "boring"],
+      "default_urgency": "MEDIUM"
+    },
+    {
+      "name": "Sanitation",
+      "name_hi": "स्वच्छता व ठोस अपशिष्ट प्रबंधन",
+      "categories": [
+        "Waste Collection",
+        "Garbage Overflow",
+        "Dead Animal Removal",
+        "Drain Cleaning",
+        "Public Toilet Hygiene"
+      ],
+      "keywords": ["garbage", "kachra", "dustbin", "dead animal", "safai", "sweeper", "dump", "badboo", "dhalo", "gandagi"],
+      "default_urgency": "MEDIUM"
+    },
+    {
+      "name": "Electricity",
+      "name_hi": "विद्युत व मार्ग प्रकाश",
+      "categories": [
+        "Streetlight Outage",
+        "Sparking Transformer",
+        "Hanging Live Wire",
+        "Pole Damaged",
+        "Phase Problem"
+      ],
+      "keywords": ["streetlight", "light", "andhera", "bijli", "transformer", "wire", "sparking", "pole", "khamba", "current", "electrocution"],
+      "default_urgency": "HIGH"
+    },
+    {
+      "name": "Roads & Infrastructure",
+      "name_hi": "सड़क व लोक निर्माण",
+      "categories": [
+        "Pothole",
+        "Road Cave-in",
+        "Open Manhole",
+        "Broken Divider",
+        "Waterlogging on Road"
+      ],
+      "keywords": ["pothole", "gaddha", "sadak", "road", "manhole", "divider", "tar", "dhasan", "footpath", "speedbreaker"],
+      "default_urgency": "MEDIUM"
+    },
+    {
+      "name": "Drainage & Sewage",
+      "name_hi": "सीवरेज व जल निकासी",
+      "categories": [
+        "Sewage Overflow",
+        "Clogged Drain",
+        "Manhole Overflow",
+        "Nullah Blockage"
+      ],
+      "keywords": ["sewage", "gutter", "drain", "naali", "overflow", "chamber", "choked", "nalah", "badboo"],
+      "default_urgency": "MEDIUM"
+    },
+    {
+      "name": "Stray Animals",
+      "name_hi": "आवारा पशु नियंत्रण",
+      "categories": [
+        "Cattle Traffic Hazard",
+        "Dog Menace",
+        "Monkey Menace",
+        "Animal Rescue"
+      ],
+      "keywords": ["stray", "cow", "gay", "bail", "cattle", "dog", "kutta", "bandar", "bites", "animal"],
+      "default_urgency": "LOW"
+    },
+    {
+      "name": "Public Health",
+      "name_hi": "लोक स्वास्थ्य व मलेरिया नियंत्रण",
+      "categories": [
+        "Mosquito Fogging",
+        "Dengue/Malaria Prevention",
+        "Water Contamination Outbreak",
+        "Food Hygiene Inspection"
+      ],
+      "keywords": ["fogging", "machhar", "mosquito", "dengue", "malaria", "dawa chhidkaw", "infection"],
+      "default_urgency": "MEDIUM"
+    },
+    {
+      "name": "Encroachment",
+      "name_hi": "अतिक्रमण निरोधक दस्ता",
+      "categories": [
+        "Footpath Blocked",
+        "Illegal Construction",
+        "Unlicensed Vendor",
+        "Traffic Obstruction"
+      ],
+      "keywords": ["encroachment", "kabza", "illegal", "footpath", "thela", "hawker", "construction", "chabutra"],
+      "default_urgency": "LOW"
+    }
+  ]
+}

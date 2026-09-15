@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket #{{ ticket.id }} Inspector &bull; CivicTrace Bhopal{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+  <a href="/tickets" class="btn-neo btn-neo-white btn-neo-sm">&larr; Back to Ticket Queue</a>
+  <div class="tech-capsule font-mono">
+    <span>Ticket ID: <strong>#{{ ticket.id }}</strong></span>
+    <span>&bull; Hash: <code>{{ ticket.ticket_hash[:12] }}...</code></span>
+  </div>
+</div>
+
+<!-- Hero Action Banner -->
+<div class="hero-banner" style="padding: 1.25rem 1.75rem; margin-bottom: 1.5rem;">
+  <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
+    <h1 class="hero-title" style="margin-bottom: 0; font-size: 1.5rem;">TICKET #{{ ticket.id }}</h1>
+    <span class="badge-neo badge-{{ ticket.status|lower|replace('_', '-') }}">{{ ticket.status }}</span>
+    <span class="badge-neo badge-{{ ticket.urgency|lower }}">{{ ticket.urgency }}</span>
+    {% if ticket.classification_method == 'fallback_rules' %}
+    <span class="badge-neo badge-fallback">Fallback Rules Active</span>
+    {% elif ticket.classification_method == 'llm' %}
+    <span class="badge-neo" style="background-color: var(--accent-blue-bg); color: var(--accent-blue);">Qwen 3.8 Max</span>
+    {% endif %}
+  </div>
+
+  <div style="display: flex; gap: 0.5rem;">
+    {% if ticket.status in ['TRIAGED', 'NEEDS_REVIEW'] %}
+    <form method="POST" action="/tickets/{{ ticket.id }}/approve">
+      <button type="submit" class="btn-neo btn-neo-green">✓ Approve Routing & Draft</button>
+    </form>
+    {% elif ticket.status == 'APPROVED' %}
+    <form method="POST" action="/tickets/{{ ticket.id }}/resolve">
+      <button type="submit" class="btn-neo btn-neo-black">✓ Mark as Resolved</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if alert_msg %}
+<div class="alert-neo alert-danger">{{ alert_msg }}</div>
+{% endif %}
+
+<div class="grid-2">
+  <!-- Left Column: Citizen Complaint & Metadata -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Complaint Card -->
+    <div class="card-neo">
+      <div class="card-header-banner">
+        <div class="card-header-title">
+          <span>📋 Citizen Complaint (Sanitized)</span>
+        </div>
+        <span class="badge-neo badge-approved">Defensive PII Pass Complete</span>
+      </div>
+
+      <!-- Highlighted Raw Text Container -->
+      <div style="background-color: var(--bg-subtle); padding: 1.25rem; border: 2px solid var(--border-dark); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem;">
+        {{ highlighted_text|safe }}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.825rem;">
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block;">Source Channel</span>
+          <strong class="font-mono">{{ ticket.source_channel }}</strong>
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block;">Received Timestamp</span>
+          <strong class="font-mono">{{ ticket.created_at.strftime('%Y-%m-%d %H:%M') }}</strong>
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block;">Ingestion Batch ID</span>
+          <code class="font-mono">{{ ticket.batch_id }}</code>
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block;">SHA-256 Idempotency Hash</span>
+          <code class="font-mono" style="font-size: 0.75rem;">{{ ticket.ticket_hash[:20] }}...</code>
+        </div>
+      </div>
+
+      {% if pii_meta %}
+      <div class="alert-neo" style="background-color: var(--accent-blue-bg); border-color: var(--accent-blue); color: var(--accent-blue); margin-top: 1.25rem; margin-bottom: 0;">
+        <strong>🛡️ Defensive PII Redactions Applied:</strong>
+        Phones masked: <strong>{{ pii_meta.get('phone', 0) }}</strong>, House/Plot numbers masked: <strong>{{ pii_meta.get('house_no', 0) }}</strong>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Duplicate Incident Cluster Card -->
+    {% if duplicate_tickets %}
+    <div class="card-neo" style="border-color: var(--accent-purple);">
+      <div class="card-header-banner" style="background-color: var(--accent-purple-bg);">
+        <div class="card-header-title" style="color: var(--accent-purple);">
+          <span>🔒 Duplicate Incident Cluster Detected</span>
+        </div>
+        <span class="badge-neo badge-duplicate">{{ duplicate_tickets|length }} Linked Tickets</span>
+      </div>
+      <p style="font-size: 0.825rem; margin-bottom: 1rem; color: var(--text-muted);">
+        The character n-gram TF-IDF clustering engine flagged near-duplicate reports for this incident within a 3-day window.
+      </p>
+      <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+        {% for dt in duplicate_tickets %}
+        <div style="background: #ffffff; padding: 0.75rem 1rem; border: 1.5px solid var(--border-dark); box-shadow: 2px 2px 0px #000; display: flex; justify-content: space-between; align-items: center; font-size: 0.825rem;">
+          <div>
+            <strong class="font-mono">#{{ dt.id }}</strong> &bull; <span class="badge-neo badge-{{ dt.urgency|lower }}">{{ dt.urgency }}</span> &bull; 
+            <span>{{ dt.sanitized_text[:50] }}...</span>
+          </div>
+          <a href="/tickets/{{ dt.id }}" class="btn-neo btn-neo-white btn-neo-sm">Inspect</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Explainability Panel: Why This Routing? -->
+    <div class="card-neo">
+      <div class="card-header-banner">
+        <div class="card-header-title">
+          <span>💡 Explainability & Reasoning Audit</span>
+        </div>
+      </div>
+      <div style="font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block;">Classification Engine</span>
+          <strong class="font-mono">{{ ticket.classification_method|upper }}</strong> (Prompt Version: <code>{{ ticket.prompt_version or 'default' }}</code>)
+        </div>
+        <div>
+          <span style="color: var(--text-muted); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; display: block; margin-bottom: 0.35rem;">Extracted Civic Reasoning Terms</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+            {% for term in reasoning_terms_list %}
+            <span class="highlight-term">{{ term }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% if safety_keywords_detected %}
+        <div class="alert-neo alert-danger" style="margin-top: 0.5rem; margin-bottom: 0;">
+          <strong>⚠️ Precedence Rule 1: Emergency Hazard Detected</strong>
+          <div style="display: flex; gap: 0.35rem; margin: 0.5rem 0; flex-wrap: wrap;">
+            {% for kw in safety_keywords_detected %}
+            <span class="highlight-safety">{{ kw }}</span>
+            {% endfor %}
+          </div>
+          <div style="font-size: 0.75rem; color: #991b1b;">
+            Deterministic urgency floor enforced: Urgency automatically elevated to CRITICAL.
+          </div>
+        </div>
+        {% endif %}
+
+        {% if ticket.safety_floor_overridden %}
+        <div class="alert-neo alert-warning" style="margin-top: 0.5rem; margin-bottom: 0;">
+          <strong>⚠️ Audited Safety Floor Downgrade:</strong>
+          <p style="font-size: 0.8rem; margin-top: 0.25rem;">
+            Operator Justification Recorded: <em>"{{ ticket.override_reason }}"</em>
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Proposal, Overrides & Acknowledgement -->
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- AI Routing Proposal Card -->
+    <div class="card-neo">
+      <div class="card-header-banner">
+        <div class="card-header-title">
+          <span>🎯 Triage Recommendation</span>
+        </div>
+        <span class="badge-neo badge-triaged font-mono">
+          Confidence: {{ (ticket.confidence * 100)|round|int }}%
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+        <div>
+          <span class="form-label">Assigned Department</span>
+          <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">
+            {{ ticket.department or 'UNASSIGNED' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Complaint Category</span>
+          <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">
+            {{ ticket.category or 'Unclassified' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Normalized Ward</span>
+          <div class="font-mono" style="font-size: 1.15rem; font-weight: 800; color: var(--text-main);">
+            {{ ticket.ward or 'UNKNOWN' }}
+          </div>
+        </div>
+        <div>
+          <span class="form-label">Urgency Level</span>
+          <div><span class="badge-neo badge-{{ ticket.urgency|lower }}">{{ ticket.urgency }}</span></div>
+        </div>
+      </div>
+
+      <!-- Human-in-the-Loop Override Form -->
+      <form method="POST" action="/tickets/{{ ticket.id }}/override" style="border-top: 2px solid var(--border-dark); padding-top: 1.25rem;">
+        <h4 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin-bottom: 1rem; color: var(--text-main);">
+          ✏️ Operator Override & Correction
+        </h4>
+        
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-control">
+              {% for dept in taxonomy_departments %}
+              <option value="{{ dept }}" {% if ticket.department == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ward / Locality</label>
+            <input type="text" name="ward" value="{{ ticket.ward or '' }}" class="form-control" placeholder="e.g. MP Nagar, Arera Colony">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <input type="text" name="category" value="{{ ticket.category or '' }}" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Urgency</label>
+            <select name="urgency" class="form-control">
+              <option value="CRITICAL" {% if ticket.urgency == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
+              <option value="HIGH" {% if ticket.urgency == 'HIGH' %}selected{% endif %}>HIGH</option>
+              <option value="MEDIUM" {% if ticket.urgency == 'MEDIUM' %}selected{% endif %}>MEDIUM</option>
+              <option value="LOW" {% if ticket.urgency == 'LOW' %}selected{% endif %}>LOW</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Audited Reason if downgrading safety urgency -->
+        <div class="form-group" style="background: var(--accent-amber-bg); padding: 0.85rem; border: 2px solid var(--accent-amber); margin-bottom: 1.25rem;">
+          <label class="form-label" style="color: var(--accent-amber); font-weight: 800;">
+            Mandatory Operator Justification (Required if downgrading CRITICAL safety floor):
+          </label>
+          <input type="text" name="override_reason" class="form-control" placeholder="e.g., Verified small controlled drill, no live hazard" value="{{ ticket.override_reason or '' }}">
+        </div>
+
+        <button type="submit" class="btn-neo btn-neo-black" style="width: 100%;">Apply Human Override</button>
+      </form>
+    </div>
+
+    <!-- Citizen Acknowledgement Draft Card -->
+    <div class="card-neo">
+      <div class="card-header-banner">
+        <div class="card-header-title">
+          <span>📨 Citizen Acknowledgement Draft</span>
+        </div>
+        <span class="badge-neo badge-approved">Bilingual Ready</span>
+      </div>
+
+      <form method="POST" action="/tickets/{{ ticket.id }}/approve">
+        <div class="form-group">
+          <label class="form-label">English Acknowledgement Draft</label>
+          <textarea name="ack_draft_en" class="form-control" rows="3">{{ ticket.ack_draft_en or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hindi Acknowledgement Draft (हिंदी पावती प्रारूप)</label>
+          <textarea name="ack_draft_hi" class="form-control" rows="3">{{ ticket.ack_draft_hi or '' }}</textarea>
+        </div>
+
+        {% if ticket.status in ['TRIAGED', 'NEEDS_REVIEW'] %}
+        <button type="submit" class="btn-neo btn-neo-green" style="width: 100%;">
+          ✓ Confirm & Lock Acknowledgement Draft
+        </button>
+        {% elif ticket.status == 'APPROVED' %}
+        <div class="alert-neo alert-success" style="margin-bottom: 0; text-align: center;">
+          ✓ Acknowledgement Locked for Official Dispatch (Status: APPROVED)
+        </div>
+        {% elif ticket.status == 'RESOLVED' %}
+        <div class="alert-neo alert-success" style="margin-bottom: 0; text-align: center;">
+          ✓ Resolved on {{ ticket.resolved_at.strftime('%Y-%m-%d %H:%M') if ticket.resolved_at else 'N/A' }}
+        </div>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

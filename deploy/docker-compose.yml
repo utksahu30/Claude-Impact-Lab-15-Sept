@@ -1,0 +1,27 @@
+services:
+  civictrace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: civictrace_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount persistent database to preserve ticket state and audit logs across restarts
+      - civictrace_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/tickets"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  civictrace_storage:
+    name: civictrace_storage

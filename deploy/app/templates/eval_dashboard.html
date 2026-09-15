@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Evaluation Benchmark &bull; CivicTrace Bhopal{% endblock %}
+
+{% block content %}
+<!-- AgriTrace Hero Banner -->
+<div class="hero-banner">
+  <div>
+    <div class="hero-tag">
+      <span>EVALUATION & BENCHMARK HARNESS</span> &bull; <span>Bhopal Municipal Corporation Benchmark Suite</span>
+    </div>
+    <h1 class="hero-title">Held-Out Test Set Benchmark</h1>
+    <p class="hero-description">
+      Honest, empirical routing accuracy and duplicate precision/recall evaluated against a curated ground-truth test set comparing Qwen 3.8 Max against the deterministic offline rulebook.
+    </p>
+  </div>
+  <form method="POST" action="/eval/run">
+    <button type="submit" class="btn-neo btn-neo-black">▶ Run Benchmark</button>
+  </form>
+</div>
+
+{% if eval_results %}
+<!-- AgriTrace 4-Stat Grid -->
+<div class="stat-grid-4">
+  <div class="stat-box">
+    <div class="stat-label-top">Qwen 3.8 Max Accuracy</div>
+    <div class="stat-number" style="color: var(--accent-blue);">{{ eval_results.llm_accuracy }}%</div>
+    <div class="stat-footer-text">Zero-Shot Reasoning Engine</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Fallback Accuracy</div>
+    <div class="stat-number" style="color: var(--accent-purple);">{{ eval_results.fallback_accuracy }}%</div>
+    <div class="stat-footer-text">Deterministic Offline Rulebook</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Duplicate Precision</div>
+    <div class="stat-number" style="color: var(--accent-green);">{{ eval_results.duplicate_precision }}%</div>
+    <div class="stat-footer-text">Char N-Gram TF-IDF Precision</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Duplicate Recall</div>
+    <div class="stat-number" style="color: var(--accent-amber);">{{ eval_results.duplicate_recall }}%</div>
+    <div class="stat-footer-text">Windowed Candidate Retrieval</div>
+  </div>
+</div>
+
+<!-- Detailed Records Table -->
+<div class="card-neo">
+  <div class="card-header-banner">
+    <div class="card-header-title">
+      <span>🔬 Detailed Test Records (Sample Size: N = {{ eval_results.total_cases }})</span>
+    </div>
+    <span class="badge-neo badge-approved">Ground-Truth Verified</span>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th>RAW COMPLAINT TEXT</th>
+          <th>GROUND TRUTH DEPT</th>
+          <th>PREDICTED DEPT</th>
+          <th style="width: 95px;">VERDICT</th>
+          <th>URGENCY (EXP &rarr; PRED)</th>
+          <th>DUP GROUP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in eval_results.cases %}
+        <tr>
+          <td class="font-mono"><strong>{{ row.id }}</strong></td>
+          <td style="font-size: 0.8rem; max-width: 300px;">{{ row.text }}</td>
+          <td><strong style="color: var(--text-main);">{{ row.expected_dept }}</strong></td>
+          <td>
+            <strong class="font-mono" style="color: {% if row.is_match %}var(--accent-green){% else %}var(--accent-red){% endif %};">
+              {{ row.predicted_dept }}
+            </strong>
+          </td>
+          <td>
+            {% if row.is_match %}
+            <span class="badge-neo badge-triaged">MATCH</span>
+            {% else %}
+            <span class="badge-neo badge-critical">MISMATCH</span>
+            {% endif %}
+          </td>
+          <td class="font-mono" style="font-size: 0.75rem;">
+            {{ row.expected_urgency }} &rarr; {{ row.predicted_urgency }}
+          </td>
+          <td class="font-mono" style="font-size: 0.75rem;">
+            {{ row.dup_group or '-' }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card-neo" style="text-align: center; padding: 4rem 1.5rem;">
+  <div class="brand-icon" style="margin: 0 auto 1.25rem auto; width: 50px; height: 50px; font-size: 1.5rem;">🧪</div>
+  <h3 style="font-size: 1.35rem; font-weight: 900; text-transform: uppercase; margin-bottom: 0.5rem;">
+    Benchmark Not Yet Executed For This Session
+  </h3>
+  <p style="font-size: 0.875rem; color: var(--text-muted); max-width: 550px; margin: 0 auto 1.75rem auto;">
+    Evaluate Qwen 3.8 Max routing accuracy and n-gram duplicate detection against the held-out test dataset (held_out_test.csv).
+  </p>
+  <form method="POST" action="/eval/run">
+    <button type="submit" class="btn-neo btn-neo-black">Run Benchmark on held_out_test.csv &rarr;</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
+

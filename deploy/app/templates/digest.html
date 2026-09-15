@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Municipal Digest &bull; CivicTrace Bhopal{% endblock %}
+
+{% block content %}
+<!-- AgriTrace Hero Banner -->
+<div class="hero-banner">
+  <div>
+    <div class="hero-tag">
+      <span>REGULATORY & OVERSIGHT HUB</span> &bull; <span>Authority: Bhopal Municipal Corporation Zonal Office</span>
+    </div>
+    <h1 class="hero-title">Municipal SLA & Departmental Oversight</h1>
+    <p class="hero-description">
+      Real-time operational visibility, 30-day departmental intake, median resolution hours (resolved tickets only), and mandatory safety floor downgrade audit logging.
+    </p>
+  </div>
+  <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;" class="no-print">
+    <button onclick="window.print()" class="btn-neo btn-neo-white">🖨️ Print Executive Report</button>
+    <a href="/digest/export.csv" class="btn-neo btn-neo-black">⬇️ Download Safe CSV Export</a>
+  </div>
+</div>
+
+<!-- AgriTrace 4-Stat Grid -->
+<div class="stat-grid-4">
+  <div class="stat-box">
+    <div class="stat-label-top">Total Intake Processed</div>
+    <div class="stat-number">{{ metrics.total_tickets }}</div>
+    <div class="stat-footer-text">Last 30-Day Multi-Channel Intake</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Median Resolution Time</div>
+    <div class="stat-number" style="color: var(--accent-green);">
+      {{ metrics.overall_median_resolution_hours }} <span style="font-size: 1.1rem; font-weight: 700;">hrs</span>
+    </div>
+    <div class="stat-footer-text">Resolved Complaints Only</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">Human Override Rate</div>
+    <div class="stat-number" style="color: var(--accent-amber);">{{ metrics.override_rate }}%</div>
+    <div class="stat-footer-text">{{ metrics.human_override_count }} Tickets Corrected by Operator</div>
+  </div>
+
+  <div class="stat-box">
+    <div class="stat-label-top">AI Failure Rate</div>
+    <div class="stat-number" style="color: {% if metrics.ai_failure_rate > 5 %}var(--accent-red){% else %}var(--accent-green){% endif %};">
+      {{ metrics.ai_failure_rate }}%
+    </div>
+    <div class="stat-footer-text">{{ metrics.ai_failed_count }} Deterministic Fallbacks Handled</div>
+  </div>
+</div>
+
+<!-- Department Breakdown -->
+<div class="card-neo" style="margin-bottom: 2rem;">
+  <div class="card-header-banner">
+    <div class="card-header-title">
+      <span>🏛️ Department Intake & SLA Performance Matrix</span>
+    </div>
+    <span class="badge-neo badge-approved">Zone-Level Accountability</span>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>DEPARTMENT</th>
+          <th>TOTAL COMPLAINTS</th>
+          <th>RESOLVED VOLUME</th>
+          <th>MEDIAN RESOLUTION (HRS)</th>
+          <th>URGENCY PROFILE (C / H / M / L)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dept, data in metrics.department_breakdown.items() %}
+        <tr>
+          <td><strong style="color: var(--text-main); font-size: 0.9rem;">{{ dept }}</strong></td>
+          <td class="font-mono" style="font-weight: 700;">{{ data.total_tickets }}</td>
+          <td class="font-mono">{{ data.resolved_count }}</td>
+          <td>
+            {% if data.median_resolution_hours %}
+            <strong class="font-mono" style="color: var(--accent-green); font-size: 0.95rem;">{{ data.median_resolution_hours }} hrs</strong>
+            {% else %}
+            <span style="color: var(--text-muted); font-size: 0.775rem;">None resolved yet</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.25rem;">
+              <span class="badge-neo badge-critical" style="font-size: 0.65rem;">{{ data.urgency_counts.get('CRITICAL', 0) }}</span>
+              <span class="badge-neo badge-high" style="font-size: 0.65rem;">{{ data.urgency_counts.get('HIGH', 0) }}</span>
+              <span class="badge-neo badge-medium" style="font-size: 0.65rem;">{{ data.urgency_counts.get('MEDIUM', 0) }}</span>
+              <span class="badge-neo badge-low" style="font-size: 0.65rem;">{{ data.urgency_counts.get('LOW', 0) }}</span>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Audited Safety Overrides -->
+<div class="card-neo">
+  <div class="card-header-banner" style="background-color: var(--accent-amber-bg);">
+    <div class="card-header-title" style="color: var(--accent-amber);">
+      <span>⚠️ Audited Safety-Floor Downgrades ({{ metrics.safety_floor_overrides }})</span>
+    </div>
+    <span class="badge-neo badge-high">Precedence Compliance</span>
+  </div>
+
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+    Every operator action lowering a safety-critical hazard ticket below CRITICAL requires an explicit, audited written justification.
+  </p>
+
+  {% if metrics.safety_floor_audit_list %}
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>TICKET ID</th>
+          <th>TIMESTAMP</th>
+          <th>WARD</th>
+          <th>RESULTING URGENCY</th>
+          <th>MANDATORY OPERATOR JUSTIFICATION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in metrics.safety_floor_audit_list %}
+        <tr>
+          <td class="font-mono"><strong>#{{ item.id }}</strong></td>
+          <td class="font-mono" style="font-size: 0.8rem;">{{ item.created_at }}</td>
+          <td class="font-mono" style="font-weight: 700;">{{ item.ward }}</td>
+          <td><span class="badge-neo badge-{{ item.urgency|lower }}">{{ item.urgency }}</span></td>
+          <td style="font-size: 0.85rem; font-weight: 600; color: #92400e;">
+            <em>"{{ item.reason }}"</em>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="font-size: 0.9rem; font-weight: 600; color: var(--accent-green); padding: 1.5rem; text-align: center; background-color: var(--accent-green-bg); border: 1.5px solid var(--accent-green);">
+    ✓ Zero safety-critical tickets have been downgraded by operators. Precedence floor fully enforced.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

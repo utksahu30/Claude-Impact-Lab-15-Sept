@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CivicTrace &bull; Bhopal Municipal Triage{% endblock %}</title>
+  <!-- Vendored Local Static Assets - Zero CDN Runtime Dependency -->
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+</head>
+<body hx-headers='{"X-Demo-Token": "{{ demo_token }}"}'>
+  <header>
+    <div class="nav-container">
+      <a href="/tickets" class="brand-group">
+        <div class="brand-icon">🏛️</div>
+        <div class="brand-text">
+          <span class="brand-title">CivicTrace</span>
+          <span class="brand-subtitle">Digital Municipal Mission</span>
+        </div>
+      </a>
+
+      <div class="tech-capsule">
+        {% if allow_external_ai %}
+        <span class="status-dot-active"></span>
+        <span>Engine: <strong style="color: var(--accent-green);">Active</strong> | Model: <strong>Qwen 3.8 Max</strong> | SHA-256 Idempotency</span>
+        {% else %}
+        <span class="status-dot-offline"></span>
+        <span>Engine: <strong style="color: var(--accent-red);">Fallback</strong> | Model: <strong>Deterministic Rulebook</strong> | 100% Offline</span>
+        {% endif %}
+      </div>
+
+      <div class="nav-actions">
+        <a href="/tickets" class="nav-btn {% if active_page == 'tickets' %}active{% endif %}">Queue</a>
+        <a href="/upload" class="nav-btn {% if active_page == 'upload' %}active{% endif %}">Ingest</a>
+        <a href="/digest" class="nav-btn {% if active_page == 'digest' %}active{% endif %}">Digest</a>
+        <a href="/eval" class="nav-btn {% if active_page == 'eval' %}active{% endif %}">Benchmark</a>
+        <a href="/admin/reset" onclick="return confirm('Reset database with synthetic Bhopal civic complaints demo data?');" class="nav-btn nav-btn-black">↺ Reset Data</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer style="text-align: center; padding: 2rem 1rem; font-size: 0.8rem; color: var(--text-muted); border-top: 2px solid var(--border-dark); background-color: #ffffff; margin-top: 3rem;">
+    <strong>CivicTrace Bhopal</strong> &bull; PS-5 Civic Triage & Departmental Accountability &bull; Powered by Qwen 3.8 Max &bull; 100% Deterministic Fallback Guaranteed
+  </footer>
+</body>
+</html>

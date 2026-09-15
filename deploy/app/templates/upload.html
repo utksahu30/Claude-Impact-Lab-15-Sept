@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Upload CSV Batch &bull; CivicTrace Bhopal{% endblock %}
+
+{% block content %}
+<!-- AgriTrace Hero Banner -->
+<div class="hero-banner">
+  <div>
+    <div class="hero-tag">
+      <span>INGESTION & DATA INTEROPERABILITY</span> &bull; <span>Bhopal Municipal Corporation Intake Hub</span>
+    </div>
+    <h1 class="hero-title">CSV Complaint Ingestion Pipeline</h1>
+    <p class="hero-description">
+      Flexible multi-channel intake supporting arbitrary municipal export schemas with automated encoding detection (UTF-8, UTF-8-sig, Windows-1252) and dynamic column mapping.
+    </p>
+  </div>
+  <div>
+    <a href="/tickets" class="btn-neo btn-neo-white">&larr; Return to Queue</a>
+  </div>
+</div>
+
+<div style="max-width: 960px; margin: 0 auto;">
+  {% if error_msg %}
+  <div class="alert-neo alert-danger">{{ error_msg }}</div>
+  {% endif %}
+
+  {% if success_batch %}
+  <!-- Batch Ingestion Success Card -->
+  <div class="card-neo" style="margin-bottom: 2rem;">
+    <div class="card-header-banner">
+      <div class="card-header-title">
+        <span>✓ Batch Ingestion Successful</span>
+      </div>
+      <span class="badge-neo badge-approved font-mono">Batch ID: {{ success_batch.id }}</span>
+    </div>
+
+    <!-- 4 Stats -->
+    <div class="stat-grid-4" style="margin: 1.25rem 0;">
+      <div class="stat-box">
+        <div class="stat-label-top">Tickets Imported</div>
+        <div class="stat-number" style="color: var(--accent-green);">{{ success_batch.imported_rows }}</div>
+        <div class="stat-footer-text">Clean Ingested Records</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label-top">Total File Rows</div>
+        <div class="stat-number">{{ success_batch.total_rows }}</div>
+        <div class="stat-footer-text">Raw CSV Lines Parsed</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label-top">Duplicates Skipped</div>
+        <div class="stat-number" style="color: var(--accent-purple);">{{ success_batch.duplicate_rows }}</div>
+        <div class="stat-footer-text">SHA-256 Hash Collisions</div>
+      </div>
+
+      <div class="stat-box">
+        <div class="stat-label-top">Row Errors</div>
+        <div class="stat-number" style="color: var(--accent-red);">{{ success_batch.error_rows }}</div>
+        <div class="stat-footer-text">Malformed or Blank Data</div>
+      </div>
+    </div>
+
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+      Encoding detected: <strong class="font-mono">{{ success_batch.encoding_detected }}</strong>
+      {% if success_batch.was_lossy %}
+      <span class="badge-neo badge-critical" style="margin-left: 0.5rem;">Lossy Fallback Triggered</span>
+      {% else %}
+      <span class="badge-neo badge-approved" style="margin-left: 0.5rem;">Lossless Clean Decode</span>
+      {% endif %}
+    </div>
+
+    {% if batch_errors %}
+    <div class="alert-neo alert-danger" style="margin-bottom: 1.25rem;">
+      <strong>Row-Level Errors Encountered:</strong>
+      <ul style="margin-left: 1.25rem; margin-top: 0.35rem;">
+        {% for err in batch_errors[:5] %}
+        <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="/tickets" class="btn-neo btn-neo-black">Go to Operator Queue &rarr;</a>
+      <a href="/upload" class="btn-neo btn-neo-white">Upload Another File</a>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if mapping_step %}
+  <!-- Step 2: Dynamic Column Mapping Selector -->
+  <div class="card-neo">
+    <div class="card-header-banner">
+      <div class="card-header-title">
+        <span>Step 2: Map CSV Columns to Triage Fields</span>
+      </div>
+      <span class="badge-neo font-mono" style="background-color: var(--accent-blue-bg); color: var(--accent-blue);">Encoding: {{ encoding_detected }}</span>
+    </div>
+
+    {% if was_lossy %}
+    <div class="alert-neo alert-warning">
+      <strong>⚠️ Warning:</strong> Charset detection was unable to identify a 100% clean encoding; lossy replacement was applied. Verify Devanagari/Hindi text in the preview below.
+    </div>
+    {% endif %}
+
+    <p style="font-size: 0.875rem; margin-bottom: 1.25rem; color: var(--text-muted);">
+      Select which column in your CSV export corresponds to each engine input. This allows the system to ingest any municipal schema dynamically.
+    </p>
+
+    <!-- Sample Data Preview -->
+    <div style="margin-bottom: 1.75rem;">
+      <h4 style="font-size: 0.8rem; font-weight: 850; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--text-main);">
+        File Preview (First 3 Rows)
+      </h4>
+      <div class="table-container" style="max-height: 220px;">
+        <table>
+          <thead>
+            <tr>
+              {% for h in headers %}
+              <th>{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in sample_rows %}
+            <tr>
+              {% for h in headers %}
+              <td class="font-mono" style="font-size: 0.775rem;">{{ row.get(h, '') }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <form method="POST" action="/upload/confirm">
+      <input type="hidden" name="batch_id" value="{{ batch_id }}">
+      <input type="hidden" name="filename" value="{{ filename }}">
+      <input type="hidden" name="encoding_used" value="{{ encoding_detected }}">
+      <input type="hidden" name="was_lossy" value="{{ 'true' if was_lossy else 'false' }}">
+      <input type="hidden" name="temp_file_id" value="{{ temp_file_id }}">
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" style="color: var(--accent-green); font-weight: 800;">Complaint Text Column (Required) *</label>
+          <select name="complaint_text_col" class="form-control" required>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['complaint', 'text', 'complaint_text', 'description', 'vivaran', 'details'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Source Channel Column (Optional)</label>
+          <select name="channel_col" class="form-control">
+            <option value="">-- None (Default: CSV Upload) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['channel', 'source', 'source_channel', 'medium'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Ward / Locality Column (Optional)</label>
+          <select name="ward_col" class="form-control">
+            <option value="">-- None (Auto-detect via RapidFuzz Gazetteer) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['ward', 'locality', 'zone', 'area', 'prabhag'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Timestamp Column (Optional)</label>
+          <select name="timestamp_col" class="form-control">
+            <option value="">-- None (Default: Current Time) --</option>
+            {% for h in headers %}
+            <option value="{{ h }}" {% if h.lower() in ['timestamp', 'date', 'created_at', 'time', 'samay'] %}selected{% endif %}>{{ h }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <a href="/upload" class="btn-neo btn-neo-white">Cancel</a>
+        <button type="submit" class="btn-neo btn-neo-black">Ingest & Run AI Triage Pipeline &rarr;</button>
+      </div>
+    </form>
+  </div>
+
+  {% elif not success_batch %}
+  <!-- Step 1: Upload Form -->
+  <div class="card-neo">
+    <div class="card-header-banner">
+      <div class="card-header-title">
+        <span>📤 Step 1: Upload Municipal Complaints CSV File</span>
+      </div>
+      <span class="badge-neo badge-triaged">Max 10 MB</span>
+    </div>
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label class="form-label">Select CSV File from Local System</label>
+        <input type="file" name="file" accept=".csv" class="form-control" required style="padding: 1.25rem; border: 2px dashed var(--border-dark); background-color: var(--bg-page); cursor: pointer;">
+        <p style="font-size: 0.78rem; margin-top: 0.65rem; color: var(--text-muted);">
+          Supports standard UTF-8, UTF-8-sig, and Windows-1252 Excel exports. The next screen provides interactive dynamic column mapping.
+        </p>
+      </div>
+      <button type="submit" class="btn-neo btn-neo-black">Upload & Preview Headers &rarr;</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

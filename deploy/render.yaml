@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: civictrace-bhopal
+    runtime: docker
+    dockerfilePath: ./deploy/Dockerfile
+    dockerContext: ./deploy
+    plan: free
+    region: oregon
+    healthCheckPath: /tickets
+    envVars:
+      - key: ALLOW_EXTERNAL_AI
+        value: "true"
+      - key: DASHSCOPE_BASE_URL
+        value: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      - key: QWEN_MODEL
+        value: "qwen3.8-max"
+      - key: DASHSCOPE_API_KEY
+        sync: false
+      - key: DEMO_TOKEN
+        generateValue: true
+    disk:
+      name: civictrace-disk
+      mountPath: /app/storage
+      sizeGB: 1
