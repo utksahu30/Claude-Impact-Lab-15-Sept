@@ -108,6 +108,9 @@ def ingest_mapped_csv(
     created_tickets: list[Ticket] = []
     errors: list[str] = []
 
+    from concurrent.futures import ThreadPoolExecutor
+
+    # Step 1: Parse rows, deduplicate against DB by hash, apply PII redaction
     for row_idx, row in enumerate(reader, start=1):
         batch.total_rows += 1
         if batch.total_rows > settings.max_rows_per_batch:
@@ -151,7 +154,7 @@ def ingest_mapped_csv(
             import json
             meta_json = json.dumps(redaction_meta) if any(redaction_meta.values()) else None
 
-            # Create Ticket
+            # Create Ticket instance
             ticket = Ticket(
                 batch_id=batch_id,
                 ticket_hash=t_hash,
@@ -162,17 +165,29 @@ def ingest_mapped_csv(
                 ward=ward_hint,
                 created_at=timestamp
             )
-
-            # Run AI or Fallback Triage Pipeline
-            process_ticket(ticket)
-
-            session.add(ticket)
             created_tickets.append(ticket)
-            batch.imported_rows += 1
 
         except Exception as e:
             batch.error_rows += 1
-            errors.append(f"Row {row_idx}: Failed to process ({str(e)})")
+            errors.append(f"Row {row_idx}: Failed to parse ({str(e)})")
+
+    # Step 2: Parallel concurrent AI & Fallback triage across all rows
+    if created_tickets:
+        workers = min(6, len(created_tickets))
+
+        def _safe_process(t: Ticket) -> Ticket:
+            try:
+                process_ticket(t)
+            except Exception as ex:
+                print(f"[csv_engine] Error processing ticket: {ex}", flush=True)
+            return t
+
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            created_tickets = list(executor.map(_safe_process, created_tickets))
+
+        for ticket in created_tickets:
+            session.add(ticket)
+            batch.imported_rows += 1
 
     session.add(batch)
     session.commit()

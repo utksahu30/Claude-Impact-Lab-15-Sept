@@ -187,7 +187,9 @@
 
       <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
         <a href="/upload" class="btn-neo btn-neo-white">Cancel</a>
-        <button type="submit" class="btn-neo btn-neo-black">Ingest & Run AI Triage Pipeline &rarr;</button>
+        <button type="submit" id="ingest-btn" onclick="this.innerHTML='⏳ Triaging in Parallel...'; this.disabled=true; this.form.submit();" class="btn-neo btn-neo-black">
+          Ingest & Run AI Triage Pipeline &rarr;
+        </button>
       </div>
     </form>
   </div>
